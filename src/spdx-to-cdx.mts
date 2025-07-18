@@ -151,13 +151,15 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     const fromBomRef = from['bom-ref'] as string;
     const toBomRef = to['bom-ref'] as string;
 
-    upgrade(to, mapScope(r.relationshipType));
+    const scope = mapScope(r.relationshipType);
+    upgrade(to, scope);
 
     if (r.relationshipType.includes('DEPENDENCY_OF')) {
       const dependentRef = toBomRef;
       const dependencyRef = fromBomRef;
 
-      const scope = mapScope(r.relationshipType);
+      // Optional dependencies aren't included in CycloneDx relationships.
+      // This was validated and tested with the reference BOMs.
       if (scope === Enums.ComponentScope.Optional) {
         continue;
       }

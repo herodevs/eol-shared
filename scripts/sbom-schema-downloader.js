@@ -93,7 +93,7 @@ const otherDownloads = [
 ];
 
 async function downloadSchema(url) {
-  return await fetch(url, { mode: 'no-cors' }).then((res) => res.text());
+  return await fetch(url).then((res) => res.text());
 }
 
 async function downloadOtherSchemas() {
