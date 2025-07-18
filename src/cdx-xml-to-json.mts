@@ -1,7 +1,22 @@
-import { XMLParser } from "fast-xml-parser";
+import { XMLParser } from 'fast-xml-parser';
 
-const COLLECTION_KEYS = ['tools', 'components', 'externalReferences', 'licenses', 'properties', 'dependencies'] as const;
-const ARRAY_ELEMENTS = ['tool', 'dependency', 'reference', 'license', 'property', 'vulnerability', 'hash'] as const;
+const COLLECTION_KEYS = [
+  'tools',
+  'components',
+  'externalReferences',
+  'licenses',
+  'properties',
+  'dependencies',
+] as const;
+const ARRAY_ELEMENTS = [
+  'tool',
+  'dependency',
+  'reference',
+  'license',
+  'property',
+  'vulnerability',
+  'hash',
+] as const;
 
 function getChildKey(key: string): string {
   if (key === 'tools') return 'tool';
@@ -18,9 +33,11 @@ function ensureArray<T>(value: T | T[]): T[] {
 
 const parser = new XMLParser({
   ignoreAttributes: false,
-  attributeNamePrefix: "",
-  textNodeName: "#text",
-  isArray: (name: any, jpath) => ARRAY_ELEMENTS.includes(name) || name === 'component' && jpath.includes('components')
+  attributeNamePrefix: '',
+  textNodeName: '#text',
+  isArray: (name: any, jpath) =>
+    ARRAY_ELEMENTS.includes(name) ||
+    (name === 'component' && jpath.includes('components')),
 });
 
 function processObject(obj: any): any {
@@ -77,11 +94,16 @@ function transform(obj: any): any {
         specVersion,
         version: Number(bomData.version) || 1,
         ...Object.fromEntries(
-          Object.entries(bomData).filter(([k]) => k !== 'xmlns' && k !== 'version')
-        )
+          Object.entries(bomData).filter(
+            ([k]) => k !== 'xmlns' && k !== 'version',
+          ),
+        ),
       });
-    } else if (COLLECTION_KEYS.includes(key as any) &&
-      value && typeof value === 'object') {
+    } else if (
+      COLLECTION_KEYS.includes(key as any) &&
+      value &&
+      typeof value === 'object'
+    ) {
       const childKey = getChildKey(key);
       const childValue = value[childKey];
 
@@ -111,7 +133,9 @@ function transform(obj: any): any {
           // Handle nested dependencies - rename 'dependency' to 'dependsOn' and flatten refs
           if (transformed.dependency) {
             const nestedDeps = ensureArray(transformed.dependency);
-            transformed.dependsOn = nestedDeps.map((nestedDep) => nestedDep.ref || nestedDep);
+            transformed.dependsOn = nestedDeps.map(
+              (nestedDep) => nestedDep.ref || nestedDep,
+            );
             delete transformed.dependency;
           }
           return transformed;
@@ -123,7 +147,7 @@ function transform(obj: any): any {
       const hashes = ensureArray(value.hash);
       result[key] = hashes.map((h) => ({
         alg: h.alg,
-        content: h['#text'] || h.content || h
+        content: h['#text'] || h.content || h,
       }));
     } else {
       result[key] = transform(value);

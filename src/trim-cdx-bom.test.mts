@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { trimCdxBom } from '../src/trim-cdx-bom.mts';
-import type { CdxBom } from '../src/types/bom/index.mts';
+import { trimCdxBom } from './trim-cdx-bom.mts';
+import type { CdxBom } from './types/bom/index.mts';
 import { Enums } from '@cyclonedx/cyclonedx-library';
 
 describe('trimCdxBom', () => {

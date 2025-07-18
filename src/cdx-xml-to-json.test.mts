@@ -5,8 +5,14 @@ import { xmlStringToJSON } from './cdx-xml-to-json.mts';
 
 describe('CycloneDX XML to JSON Converter', () => {
   test('should convert CycloneDX 1.4 XML to JSON with correct structure', async () => {
-    const xmlContent = await readFile('fixtures/cdx-bom-examples/bom.1.4.xml', 'utf8');
-    const jsonContent = await readFile('fixtures/cdx-bom-examples/bom.1.4.json', 'utf8');
+    const xmlContent = await readFile(
+      'fixtures/cdx-bom-examples/bom.1.4.xml',
+      'utf8',
+    );
+    const jsonContent = await readFile(
+      'fixtures/cdx-bom-examples/bom.1.4.json',
+      'utf8',
+    );
     const result = await xmlStringToJSON(xmlContent);
 
     assert.deepEqual(result, JSON.parse(jsonContent));
@@ -39,7 +45,10 @@ describe('CycloneDX XML to JSON Converter', () => {
     const versions = ['1.2', '1.3', '1.4'];
 
     for (const version of versions) {
-      const xmlContent = await readFile(`fixtures/cdx-bom-examples/bom.${version}.xml`, 'utf8');
+      const xmlContent = await readFile(
+        `fixtures/cdx-bom-examples/bom.${version}.xml`,
+        'utf8',
+      );
       const result = await xmlStringToJSON(xmlContent);
 
       assert.equal(result.bomFormat, 'CycloneDX');
