@@ -1,0 +1,36 @@
+{
+  "name": "eol-shared",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test --experimental-test-coverage src/**/*.test.*",
+    "lint": "oxlint",
+    "download-schemas": "node scripts/sbom-schema-downloader.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/herodevs/eol-shared.git"
+  },
+  "author": "HeroDevs, Inc.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/herodevs/eol-shared/issues"
+  },
+  "homepage": "https://github.com/herodevs/eol-shared#readme",
+  "description": "",
+  "devDependencies": {
+    "@prettier/plugin-oxc": "^0.0.4",
+    "@types/node": "^24.0.14",
+    "ajv": "^8.17.1",
+    "oxlint": "^1.6.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@cyclonedx/cyclonedx-library": "^8.5.0",
+    "fast-xml-parser": "^5.2.5",
+    "json-schema-to-typescript": "^15.0.4"
+  }
+}
