@@ -7,7 +7,7 @@ const COLLECTION_KEYS = [
   'licenses',
   'properties',
   'dependencies',
-] as const;
+];
 const ARRAY_ELEMENTS = [
   'tool',
   'dependency',
@@ -16,7 +16,7 @@ const ARRAY_ELEMENTS = [
   'property',
   'vulnerability',
   'hash',
-] as const;
+];
 
 function getChildKey(key: string): string {
   if (key === 'tools') return 'tool';
@@ -35,7 +35,7 @@ const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '',
   textNodeName: '#text',
-  isArray: (name: any, jpath) =>
+  isArray: (name: string, jpath) =>
     ARRAY_ELEMENTS.includes(name) ||
     (name === 'component' && jpath.includes('components')),
 });
@@ -100,7 +100,7 @@ function transform(obj: any): any {
         ),
       });
     } else if (
-      COLLECTION_KEYS.includes(key as any) &&
+      COLLECTION_KEYS.includes(key) &&
       value &&
       typeof value === 'object'
     ) {

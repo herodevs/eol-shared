@@ -87,6 +87,27 @@ describe('spdxToCdxBom', () => {
       ]);
     });
 
+    test('should handle tool names with hyphens and semver modifiers', () => {
+      const result = buildSpdxAndConvert({
+        creationInfo: {
+          created: '2024-01-01T00:00:00Z',
+          creators: [
+            'Tool: my-awesome-tool-1.0.0',
+            'Tool: webpack-bundler-5.88.0-beta',
+            'Tool: eslint-config-airbnb-2.1.0-alpha.1',
+            'Tool: @angular/cli-17.0.0-rc.1',
+          ],
+        },
+      });
+
+      assert.deepStrictEqual(result.metadata?.tools, [
+        { name: 'my-awesome-tool', version: '1.0.0' },
+        { name: 'webpack-bundler', version: '5.88.0-beta' },
+        { name: 'eslint-config-airbnb', version: '2.1.0-alpha.1' },
+        { name: '@angular/cli', version: '17.0.0-rc.1' },
+      ]);
+    });
+
     test('should handle malformed tool entries gracefully', () => {
       const result = buildSpdxAndConvert({
         creationInfo: {
@@ -103,10 +124,10 @@ describe('spdxToCdxBom', () => {
 
       assert.deepStrictEqual(result.metadata?.tools, [
         { name: 'npm', version: '10.9.2' },
-        { name: 'malformed', version: 'tool' },
+        { name: 'malformed-tool-entry', version: '' },
         { name: '', version: '' },
-        { name: 'just', version: 'name' },
-        { name: '', version: 'version' },
+        { name: 'just-name', version: '' },
+        { name: '-version-only', version: '' },
       ]);
     });
 

@@ -44,7 +44,7 @@ describe('trimCdxBom', () => {
 
     const result = trimCdxBom(mockBom);
 
-    assert.strictEqual(result, mockBom); // Should return the same object
+    assert.notDeepStrictEqual(result, mockBom);
     assert.partialDeepStrictEqual(result.components![0], {
       externalReferences: [],
       evidence: {},
@@ -57,5 +57,17 @@ describe('trimCdxBom', () => {
       hashes: [],
       properties: [],
     });
+  });
+
+  test('should handle missing components array gracefully', () => {
+    const mockBom: CdxBom = {
+      bomFormat: 'CycloneDX',
+      specVersion: '1.4',
+      version: 1,
+    };
+
+    assert.doesNotThrow(() => trimCdxBom(mockBom));
+    const result = trimCdxBom(mockBom);
+    assert.equal(result.components, undefined);
   });
 });

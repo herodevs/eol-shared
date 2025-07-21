@@ -36,6 +36,9 @@ const algorithmMap: Record<string, Enums.HashAlgorithm> = {
   BLAKE3: Enums.HashAlgorithm.BLAKE3,
 };
 
+const LICENSE_EXPRESSION_REGEX = /\b(AND|OR|WITH)\b|\(|\)/;
+const TOOL_NAME_REGEX = /^(.+)[-@](\d.*)$/;
+
 function upgrade(c: Component, next: Scope) {
   if (!c.scope || rank[next] > rank[c.scope]) c.scope = next;
 }
@@ -68,8 +71,12 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
       tools: spdx.creationInfo.creators
         .filter((c) => c.startsWith('Tool: '))
         .map((c) => {
-          const [name, version] = c.substring(6).split('-');
-          return { name: name || '', version: version || '' };
+          const toolString = c.substring(6);
+          const versionMatch = toolString.match(TOOL_NAME_REGEX);
+
+          return versionMatch
+            ? { name: versionMatch[1] || '', version: versionMatch[2] || '' }
+            : { name: toolString || '', version: '' };
         }),
     },
     components: [],
@@ -110,7 +117,7 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     }
 
     if (p.licenseDeclared && p.licenseDeclared !== 'NOASSERTION') {
-      const license: License = /\b(AND|OR|WITH)\b|\(|\)/.test(p.licenseDeclared)
+      const license: License = LICENSE_EXPRESSION_REGEX.test(p.licenseDeclared)
         ? {
             expression: p.licenseDeclared,
             acknowledgement: Enums.LicenseAcknowledgement.Declared,
