@@ -1,25 +1,46 @@
 {
-  "name": "eol-shared",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "@herodevs/eol-shared",
   "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "test": "node --test --experimental-test-coverage src/**/*.test.*",
-    "lint": "oxlint",
-    "download-schemas": "node scripts/sbom-schema-downloader.js"
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/herodevs/eol-shared#readme",
+  "bugs": {
+    "url": "https://github.com/herodevs/eol-shared/issues"
   },
+  "license": "ISC",
+  "author": "HeroDevs, Inc.",
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/herodevs/eol-shared.git"
   },
-  "author": "HeroDevs, Inc.",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/herodevs/eol-shared/issues"
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "test": "node --test --experimental-strip-types --experimental-test-coverage src/**/*.test.*",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix --fix-suggestions",
+    "format:check": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "download-schemas": "node scripts/sbom-schema-downloader.js",
+    "prepublishOnly": "npm run build"
   },
-  "homepage": "https://github.com/herodevs/eol-shared#readme",
-  "description": "",
+  "dependencies": {
+    "@cyclonedx/cyclonedx-library": "^8.5.0",
+    "fast-xml-parser": "^5.2.5",
+    "json-schema-to-typescript": "^15.0.4"
+  },
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
     "@types/node": "^24.0.14",
@@ -27,9 +48,7 @@
     "prettier": "^3.6.2",
     "typescript": "^5.8.3"
   },
-  "dependencies": {
-    "@cyclonedx/cyclonedx-library": "^8.5.0",
-    "fast-xml-parser": "^5.2.5",
-    "json-schema-to-typescript": "^15.0.4"
+  "engines": {
+    "node": ">=22"
   }
 }
