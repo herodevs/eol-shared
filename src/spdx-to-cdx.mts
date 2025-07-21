@@ -22,18 +22,18 @@ const rank: Record<Scope, number> = {
 };
 
 const algorithmMap: Record<string, Enums.HashAlgorithm> = {
-  'MD5': Enums.HashAlgorithm.MD5,
-  'SHA1': Enums.HashAlgorithm['SHA-1'],
-  'SHA256': Enums.HashAlgorithm['SHA-256'],
-  'SHA384': Enums.HashAlgorithm['SHA-384'],
-  'SHA512': Enums.HashAlgorithm['SHA-512'],
+  MD5: Enums.HashAlgorithm.MD5,
+  SHA1: Enums.HashAlgorithm['SHA-1'],
+  SHA256: Enums.HashAlgorithm['SHA-256'],
+  SHA384: Enums.HashAlgorithm['SHA-384'],
+  SHA512: Enums.HashAlgorithm['SHA-512'],
   'SHA3-256': Enums.HashAlgorithm['SHA3-256'],
   'SHA3-384': Enums.HashAlgorithm['SHA3-384'],
   'SHA3-512': Enums.HashAlgorithm['SHA3-512'],
   'BLAKE2b-256': Enums.HashAlgorithm['BLAKE2b-256'],
   'BLAKE2b-384': Enums.HashAlgorithm['BLAKE2b-384'],
   'BLAKE2b-512': Enums.HashAlgorithm['BLAKE2b-512'],
-  'BLAKE3': Enums.HashAlgorithm.BLAKE3,
+  BLAKE3: Enums.HashAlgorithm.BLAKE3,
 };
 
 function upgrade(c: Component, next: Scope) {
@@ -110,10 +110,17 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     }
 
     if (p.licenseDeclared && p.licenseDeclared !== 'NOASSERTION') {
-      const license: License =
-        /\b(AND|OR|WITH)\b|\(|\)/.test(p.licenseDeclared)
-          ? { expression: p.licenseDeclared, acknowledgement: Enums.LicenseAcknowledgement.Declared}
-          : { license: { id: p.licenseDeclared, acknowledgement: Enums.LicenseAcknowledgement.Declared} };
+      const license: License = /\b(AND|OR|WITH)\b|\(|\)/.test(p.licenseDeclared)
+        ? {
+            expression: p.licenseDeclared,
+            acknowledgement: Enums.LicenseAcknowledgement.Declared,
+          }
+        : {
+            license: {
+              id: p.licenseDeclared,
+              acknowledgement: Enums.LicenseAcknowledgement.Declared,
+            },
+          };
       component.licenses = [license];
     }
 
