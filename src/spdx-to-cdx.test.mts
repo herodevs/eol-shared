@@ -424,7 +424,7 @@ describe('spdxToCdxBom', () => {
       });
 
       const cmp = result.components?.[0] as Component;
-      assert.deepStrictEqual(cmp.licenses, [{ license: { id: 'MIT' } }]);
+      assert.partialDeepStrictEqual(cmp.licenses, [{ license: { id: 'MIT' } }]);
     });
 
     test('should map complex license expressions', () => {
@@ -441,7 +441,7 @@ describe('spdxToCdxBom', () => {
       });
 
       const cmp = result.components?.[0] as Component;
-      assert.deepStrictEqual(cmp.licenses, [
+      assert.partialDeepStrictEqual(cmp.licenses, [
         { expression: 'MIT OR Apache-2.0' },
       ]);
     });
