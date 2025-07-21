@@ -21,6 +21,21 @@ const rank: Record<Scope, number> = {
   [Enums.ComponentScope.Excluded]: 1,
 };
 
+const algorithmMap: Record<string, Enums.HashAlgorithm> = {
+  'MD5': Enums.HashAlgorithm.MD5,
+  'SHA1': Enums.HashAlgorithm['SHA-1'],
+  'SHA256': Enums.HashAlgorithm['SHA-256'],
+  'SHA384': Enums.HashAlgorithm['SHA-384'],
+  'SHA512': Enums.HashAlgorithm['SHA-512'],
+  'SHA3-256': Enums.HashAlgorithm['SHA3-256'],
+  'SHA3-384': Enums.HashAlgorithm['SHA3-384'],
+  'SHA3-512': Enums.HashAlgorithm['SHA3-512'],
+  'BLAKE2b-256': Enums.HashAlgorithm['BLAKE2b-256'],
+  'BLAKE2b-384': Enums.HashAlgorithm['BLAKE2b-384'],
+  'BLAKE2b-512': Enums.HashAlgorithm['BLAKE2b-512'],
+  'BLAKE3': Enums.HashAlgorithm.BLAKE3,
+};
+
 function upgrade(c: Component, next: Scope) {
   if (!c.scope || rank[next] > rank[c.scope]) c.scope = next;
 }
@@ -39,14 +54,6 @@ function mapScope(rel: string): Scope {
     default:
       return Enums.ComponentScope.Required;
   }
-}
-
-function mapHashAlgorithm(spdxAlg: string): Enums.HashAlgorithm | undefined {
-  const upper = spdxAlg.toUpperCase();
-  if (upper.startsWith('SHA')) {
-    return `SHA-${upper.substring(3)}` as Enums.HashAlgorithm;
-  }
-  return upper as Enums.HashAlgorithm;
 }
 
 export function spdxToCdxBom(spdx: SPDX23): CdxBom {
@@ -95,7 +102,7 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     if (p.checksums) {
       component.hashes = p.checksums
         .map((checksum) => {
-          const alg = mapHashAlgorithm(checksum.algorithm);
+          const alg = algorithmMap[checksum.algorithm];
           if (!alg) return undefined;
           return { alg, content: checksum.checksumValue };
         })
@@ -104,9 +111,9 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
 
     if (p.licenseDeclared && p.licenseDeclared !== 'NOASSERTION') {
       const license: License =
-        p.licenseDeclared.includes('AND') || p.licenseDeclared.includes('OR')
-          ? { expression: p.licenseDeclared }
-          : { license: { id: p.licenseDeclared } };
+        /\b(AND|OR|WITH)\b|\(|\)/.test(p.licenseDeclared)
+          ? { expression: p.licenseDeclared, acknowledgement: Enums.LicenseAcknowledgement.Declared}
+          : { license: { id: p.licenseDeclared, acknowledgement: Enums.LicenseAcknowledgement.Declared} };
       component.licenses = [license];
     }
 

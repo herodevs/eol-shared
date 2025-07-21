@@ -1,4 +1,5 @@
 {
   "singleQuote": true,
-  "objectWrap": "collapse"
+  "objectWrap": "collapse",
+  "overrides": [{ "files": "*.json", "options": { "objectWrap": "preserve" } }]
 }

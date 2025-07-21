@@ -2,6 +2,7 @@ import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { spdxToCdxBom } from './spdx-to-cdx.mts';
 import type { SPDX23 } from './types/bom/spdx-2.3.schema.js';
+import type { Component, Dependency } from './types/bom/index.mts';
 
 function buildSpdxAndConvert(spdx: Partial<SPDX23>) {
   const baseSpdx: SPDX23 = {
@@ -207,8 +208,10 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0]['bom-ref'], 'lodash@4.17.21');
-      assert.equal(result.components?.[1]['bom-ref'], '@types/node@18.15.0');
+      const cmp1 = result.components?.[0] as Component;
+      const cmp2 = result.components?.[1] as Component;
+      assert.equal(cmp1['bom-ref'], 'lodash@4.17.21');
+      assert.equal(cmp2['bom-ref'], '@types/node@18.15.0');
     });
 
     test('should map component fields correctly', () => {
@@ -276,7 +279,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].purl, 'pkg:npm/test-package@1.0.0');
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.purl, 'pkg:npm/test-package@1.0.0');
     });
 
     test('should handle missing PURL gracefully', () => {
@@ -291,7 +295,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].purl, '');
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.purl, '');
     });
 
     test('should handle multiple external references', () => {
@@ -318,7 +323,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].purl, 'pkg:npm/test-package@1.0.0');
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.purl, 'pkg:npm/test-package@1.0.0');
     });
   });
 
@@ -336,7 +342,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].hashes, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.hashes, [
         { alg: 'SHA-256', content: 'abcd1234' },
       ]);
     });
@@ -354,7 +361,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].hashes, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.hashes, [
         { alg: 'SHA-512', content: 'def567890' },
       ]);
     });
@@ -376,7 +384,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].hashes, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.hashes, [
         { alg: 'SHA-256', content: 'abcd1234' },
         { alg: 'SHA-512', content: 'def567890' },
         { alg: 'MD5', content: 'xyz999' },
@@ -395,7 +404,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].hashes, undefined);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.hashes, undefined);
     });
   });
 
@@ -413,9 +423,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].licenses, [
-        { license: { id: 'MIT' } },
-      ]);
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.licenses, [{ license: { id: 'MIT' } }]);
     });
 
     test('should map complex license expressions', () => {
@@ -431,7 +440,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].licenses, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.licenses, [
         { expression: 'MIT OR Apache-2.0' },
       ]);
     });
@@ -449,7 +459,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].licenses, undefined);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.licenses, undefined);
     });
 
     test('should handle missing license declarations', () => {
@@ -464,7 +475,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].licenses, undefined);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.licenses, undefined);
     });
   });
 
@@ -482,7 +494,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].externalReferences, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.externalReferences, [
         { type: 'website', url: 'https://example.com' },
       ]);
     });
@@ -500,7 +513,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].externalReferences, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.externalReferences, [
         {
           type: 'distribution',
           url: 'https://registry.npmjs.org/test/-/test-1.0.0.tgz',
@@ -521,7 +535,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].externalReferences, undefined);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.externalReferences, undefined);
     });
 
     test('should handle missing homepage and downloadLocation', () => {
@@ -536,7 +551,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].externalReferences, undefined);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.externalReferences, undefined);
     });
 
     test('should create multiple external references', () => {
@@ -553,7 +569,8 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.deepStrictEqual(result.components?.[0].externalReferences, [
+      const cmp = result.components?.[0] as Component;
+      assert.deepStrictEqual(cmp.externalReferences, [
         { type: 'website', url: 'https://example.com' },
         {
           type: 'distribution',
@@ -607,11 +624,12 @@ describe('spdxToCdxBom', () => {
       });
 
       assert.equal(
-        result.components?.find((c) => c.name === 'my-app'),
+        result.components?.find((c) => c.name === 'my-app') as Component,
         undefined,
       );
       assert.equal(result.components?.length, 1);
-      assert.equal(result.components?.[0].name, 'dependency');
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.name, 'dependency');
     });
 
     test('should handle missing documentDescribes', () => {
@@ -818,7 +836,8 @@ describe('spdxToCdxBom', () => {
       });
 
       assert.equal(result.dependencies?.length, 1);
-      assert.deepStrictEqual(result.dependencies?.[0].dependsOn, []);
+      const dep = result.dependencies?.[0] as Dependency;
+      assert.deepStrictEqual(dep.dependsOn, []);
     });
 
     test('should create empty dependsOn arrays for isolated components', () => {
@@ -995,7 +1014,8 @@ describe('spdxToCdxBom', () => {
 
       assert.equal(result.components?.length, 1);
       assert.equal(result.dependencies?.length, 1);
-      assert.deepStrictEqual(result.dependencies?.[0].dependsOn, []);
+      const dep = result.dependencies?.[0] as Dependency;
+      assert.deepStrictEqual(dep.dependsOn, []);
     });
 
     test('should handle invalid SPDX IDs in relationships', () => {
@@ -1024,7 +1044,8 @@ describe('spdxToCdxBom', () => {
 
       // Should ignore invalid relationships
       assert.equal(result.dependencies?.length, 1);
-      assert.deepStrictEqual(result.dependencies?.[0].dependsOn, []);
+      const dep = result.dependencies?.[0] as Dependency;
+      assert.deepStrictEqual(dep.dependsOn, []);
     });
   });
 
@@ -1121,7 +1142,9 @@ describe('spdxToCdxBom', () => {
             description: 'My application',
             licenseDeclared: 'MIT',
             homepage: 'https://my-app.com',
-            checksums: [{ algorithm: 'SHA256', checksumValue: 'abc123' }],
+            checksums: [
+              { algorithm: 'SHA256' as any, checksumValue: 'abc123' },
+            ],
           },
           {
             SPDXID: 'SPDXRef-Package-react',
@@ -1136,7 +1159,7 @@ describe('spdxToCdxBom', () => {
         relationships: [
           {
             spdxElementId: 'SPDXRef-Package-react',
-            relationshipType: 'DEPENDENCY_OF',
+            relationshipType: 'DEPENDENCY_OF' as const,
             relatedSpdxElement: 'SPDXRef-Package-root',
           },
         ],
@@ -1261,12 +1284,10 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.name, '@scope/package-name_with.special-chars');
       assert.equal(
-        result.components?.[0].name,
-        '@scope/package-name_with.special-chars',
-      );
-      assert.equal(
-        result.components?.[0]['bom-ref'],
+        cmp['bom-ref'],
         '@scope/package-name_with.special-chars@1.0.0-beta.1',
       );
     });
@@ -1284,8 +1305,9 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].name, longName);
-      assert.equal(result.components?.[0]['bom-ref'], `${longName}@1.0.0`);
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.name, longName);
+      assert.equal(cmp['bom-ref'], `${longName}@1.0.0`);
     });
 
     test('should handle components without versions', () => {
@@ -1299,8 +1321,9 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.components?.[0].version, '');
-      assert.equal(result.components?.[0]['bom-ref'], 'versionless-package@');
+      const cmp = result.components?.[0] as Component;
+      assert.equal(cmp.version, '');
+      assert.equal(cmp['bom-ref'], 'versionless-package@');
     });
 
     test('should handle circular dependencies', () => {
