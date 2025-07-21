@@ -32,7 +32,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix --fix-suggestions",
     "format:check": "prettier --check .",
-    "format:fix": "prettier --write .",
+    "format:write": "prettier --write .",
     "download-schemas": "node scripts/sbom-schema-downloader.js",
     "prepublishOnly": "npm run build"
   },
