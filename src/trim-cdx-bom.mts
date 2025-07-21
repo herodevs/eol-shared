@@ -1,4 +1,4 @@
-import type { CdxBom } from './types/bom/index.mts';
+import type { CdxBom } from './types/index.mts';
 
 export function trimCdxBom(cdxBom: CdxBom): CdxBom {
   for (const component of cdxBom.components ?? []) {

@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { spdxToCdxBom } from './spdx-to-cdx.mts';
 import type { SPDX23 } from './types/bom/spdx-2.3.schema.js';
-import type { Component, Dependency } from './types/bom/index.mts';
+import type { Component, Dependency } from './types/index.mts';
 
 function buildSpdxAndConvert(spdx: Partial<SPDX23>) {
   const baseSpdx: SPDX23 = {
@@ -424,7 +424,9 @@ describe('spdxToCdxBom', () => {
       });
 
       const cmp = result.components?.[0] as Component;
-      assert.partialDeepStrictEqual(cmp.licenses, [{ license: { id: 'MIT' } }]);
+      assert.partialDeepStrictEqual(cmp.licenses, [
+        { license: { id: 'MIT', acknowledgement: 'declared' } },
+      ]);
     });
 
     test('should map complex license expressions', () => {
@@ -442,7 +444,7 @@ describe('spdxToCdxBom', () => {
 
       const cmp = result.components?.[0] as Component;
       assert.partialDeepStrictEqual(cmp.licenses, [
-        { expression: 'MIT OR Apache-2.0' },
+        { expression: 'MIT OR Apache-2.0', acknowledgement: 'declared' },
       ]);
     });
 
