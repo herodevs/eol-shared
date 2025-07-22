@@ -1,0 +1,3 @@
+fixtures/**/*
+schemas/**/*
+src/types/bom/**/*

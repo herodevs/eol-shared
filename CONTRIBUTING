@@ -1,0 +1,27 @@
+## Development
+
+### Building
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm test
+```
+
+### Linting
+
+```bash
+npm run lint
+npm run lint:fix
+```
+
+### Formatting
+
+```bash
+npm run format:check
+npm run format:write
+```

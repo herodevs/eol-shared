@@ -1,0 +1,1 @@
+Sourced from https://github.com/CycloneDX/bom-examples/tree/master/SBOM/juice-shop/via_npm/bare
