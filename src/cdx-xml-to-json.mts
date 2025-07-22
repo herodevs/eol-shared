@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
+import type { CdxBom } from './index.mts';
 
 const COLLECTION_KEYS = [
   'tools',
@@ -157,7 +158,13 @@ function transform(obj: any): any {
   return result;
 }
 
-export async function xmlStringToJSON(xml: string) {
+/**
+ * Converts a CycloneDX XML string to a JSON object.
+ * The CycloneDX spec does not change between formats, so conversion from XML to JSON is lossless.
+ * @param xml - The XML string to parse
+ * @returns The parsed CycloneDX BOM object
+ */
+export function xmlStringToJSON(xml: string): CdxBom {
   const parsed = parser.parse(xml);
   return transform(parsed);
 }

@@ -59,6 +59,12 @@ function mapScope(rel: string): Scope {
   }
 }
 
+/**
+ * Converts an SPDX BOM to CycloneDX format.
+ * Takes the most important package and relationship data from SPDX and translates them into CycloneDX components and dependencies as closely as possible.
+ * @param spdx - The SPDX BOM object to convert
+ * @returns A CycloneDX BOM object
+ */
 export function spdxToCdxBom(spdx: SPDX23): CdxBom {
   const bom: CdxBom = {
     $schema: 'http://cyclonedx.org/schema/bom-1.5.schema.json',
