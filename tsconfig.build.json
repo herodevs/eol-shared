@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "allowImportingTsExtensions": false
-  },
-  "exclude": ["**/*.test.*", "**/*.spec.*"]
-}

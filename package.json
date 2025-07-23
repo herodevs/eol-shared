@@ -11,16 +11,16 @@
   "license": "ISC",
   "author": "HeroDevs, Inc.",
   "files": [
-    "dist/**/*"
+    "**/*"
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.mts"
+      "import": "./index.mjs",
+      "types": "./index.d.mts"
     }
   },
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "main": "./index.mjs",
+  "types": "./index.d.mts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/herodevs/eol-shared.git"
