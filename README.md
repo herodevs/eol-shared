@@ -5,7 +5,7 @@ A TypeScript utility library for End-of-Life (EOL) scanning and analysis.
 ## Installation
 
 ```bash
-npm install @herodevs/eol-shared
+npm install github:herodevs/eol-shared
 ```
 
 ## Requirements
