@@ -34,7 +34,7 @@
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "download-schemas": "node scripts/sbom-schema-downloader.js",
-    "prepublishOnly": "npm run build"
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@cyclonedx/cyclonedx-library": "^8.5.0",
