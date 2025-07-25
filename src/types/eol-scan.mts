@@ -11,10 +11,20 @@ export interface EolScanComponentMetadata {
   cve: CveStats[];
 }
 
+export interface NesRemediation {
+  purls: {
+    nes: string;
+    oss: string;
+  };
+  urls: {
+    main: string;
+  };
+}
+
 export interface EolScanComponent {
   metadata: EolScanComponentMetadata | null;
   purl: string;
-  nesRemediation?: { target: string } | null;
+  nesRemediation?: NesRemediation | null;
 }
 
 export interface EolReportMetadata {

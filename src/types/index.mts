@@ -9,15 +9,3 @@ export type ExternalReference =
   CDX.Serialize.JSON.Types.Normalized.ExternalReference;
 
 export const ComponentScope = CDX.Enums.ComponentScope;
-
-export type {
-  ComponentStatus,
-  CreateEolReportInput,
-  CveStats,
-  EolScanComponentMetadata,
-  EolScanComponent,
-  EolReportMetadata,
-  EolReport,
-  EolReportQueryResponse,
-  EolReportMutationResponse,
-} from './eol-scan.mjs';

@@ -4,8 +4,6 @@ export { spdxToCdxBom } from './spdx-to-cdx.mjs';
 export { deriveComponentStatus } from './eol/utils.mjs';
 
 export type {
-  CdxBom,
-  Component,
   ComponentStatus,
   CreateEolReportInput,
   CveStats,
@@ -15,6 +13,12 @@ export type {
   EolReport,
   EolReportQueryResponse,
   EolReportMutationResponse,
+  NesRemediation,
+} from './types/eol-scan.mjs';
+
+export type {
+  CdxBom,
+  Component,
   Dependency,
   ExternalReference,
   Hash,
