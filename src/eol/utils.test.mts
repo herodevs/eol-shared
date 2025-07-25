@@ -14,9 +14,9 @@ describe('deriveComponentStatus', () => {
       isEol: true,
       eolAt: null,
       eolReasons: ['End of life'],
-      cve: []
+      cve: [],
     };
-    
+
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'EOL');
   });
@@ -26,9 +26,9 @@ describe('deriveComponentStatus', () => {
       isEol: false,
       eolAt: '2020-01-01T00:00:00.000Z',
       eolReasons: ['End of life'],
-      cve: []
+      cve: [],
     };
-    
+
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'EOL');
   });
@@ -39,9 +39,9 @@ describe('deriveComponentStatus', () => {
       isEol: false,
       eolAt: currentDate,
       eolReasons: [],
-      cve: []
+      cve: [],
     };
-    
+
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'EOL');
   });
@@ -49,14 +49,14 @@ describe('deriveComponentStatus', () => {
   test('should return EOL_UPCOMING when eolAt is in the future', () => {
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
-    
+
     const metadata: EolScanComponentMetadata = {
       isEol: false,
       eolAt: futureDate.toISOString(),
       eolReasons: [],
-      cve: []
+      cve: [],
     };
-    
+
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'EOL_UPCOMING');
   });
@@ -66,9 +66,9 @@ describe('deriveComponentStatus', () => {
       isEol: false,
       eolAt: null,
       eolReasons: [],
-      cve: []
+      cve: [],
     };
-    
+
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'OK');
   });
