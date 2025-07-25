@@ -72,6 +72,8 @@ const trimmedBom: CdxBom = trimCdxBom(originalBom);
 
 The package exports the following TypeScript types:
 
+#### BOM
+
 - `CdxBom` - CycloneDX BOM structure as exported from [`@cyclonedx/cyclonedx-library`](https://github.com/CycloneDX/cyclonedx-javascript-library/blob/447db28f47ffd03b6f9c2f4a450bef0f0392c6bb/src/serialize/json/types.ts#L76)
 - `Component` - Component definition
 - `Dependency` - Dependency relationship
@@ -79,6 +81,18 @@ The package exports the following TypeScript types:
 - `License` - License information
 - `ExternalReference` - External reference data
 - `ComponentScope` - Component scope enumeration
+
+#### EOL
+
+- `CveStats` - CVE statistics with ID, CVSS score, and publication date
+- `EolScanComponentMetadata` - Metadata for EOL scan components including EOL status, dates, reasons, and CVE information
+- `EolScanComponent` - Component data for EOL scanning with metadata, PURL, and optional NES remediation
+- `EolReportMetadata` - Report-level metadata including component counts
+- `EolReport` - Complete EOL scan report with components and metadata
+- `EolReportQueryResponse` - GraphQL response type for EOL report queries
+- `EolReportMutationResponse` - GraphQL response type for EOL report mutations
+- `CreateEolReportInput` - Input parameters for creating new EOL reports
+- `ComponentStatus` - Component status enumeration (UNKNOWN, OK, EOL, EOL_UPCOMING)
 
 ## Resources
 
