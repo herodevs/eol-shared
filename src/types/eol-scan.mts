@@ -30,25 +30,16 @@ export interface EolReport {
 }
 
 export interface EolReportQueryResponse {
-  eol: {
-    report: {
-      result: EolReport | null;
-    };
-  };
+  eol: { report: { result: EolReport | null } };
 }
 
 export interface EolReportMutationResponse {
-  eol: {
-    createReport: {
-      success: boolean;
-      report: EolReport | null;
-    };
-  };
+  eol: { createReport: { success: boolean; report: EolReport | null } };
 }
 
 export interface CreateEolReportInput {
   components: string[];
 }
 
-export type ComponentStatus = (typeof VALID_STATUSES)[number];
 export const VALID_STATUSES = ['UNKNOWN', 'OK', 'EOL', 'EOL_UPCOMING'] as const;
+export type ComponentStatus = (typeof VALID_STATUSES)[number];
