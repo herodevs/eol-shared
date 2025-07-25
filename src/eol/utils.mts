@@ -10,11 +10,14 @@ export function deriveComponentStatus(
     return 'UNKNOWN';
   }
 
-  if (metadata.isEol) {
+  const eolAt = metadata.eolAt ?? '';
+  const now = new Date().toISOString();
+
+  if (metadata.isEol || (eolAt && eolAt <= now)) {
     return 'EOL';
   }
 
-  if ((metadata.eolAt ?? '') > new Date().toISOString()) {
+  if (eolAt > now) {
     return 'EOL_UPCOMING';
   }
 

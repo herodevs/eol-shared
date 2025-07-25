@@ -1,7 +1,7 @@
 export { xmlStringToJSON } from './cdx-xml-to-json.mjs';
 export { trimCdxBom } from './trim-cdx-bom.mjs';
 export { spdxToCdxBom } from './spdx-to-cdx.mjs';
-export { deriveComponentStatus } from './bom/utils.mjs';
+export { deriveComponentStatus } from './eol/utils.mjs';
 
 export type {
   CdxBom,
