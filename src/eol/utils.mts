@@ -29,10 +29,10 @@ export function deriveComponentStatus(
 function safeParsePurl(purl: string): string | null {
   try {
     return PackageURL.fromString(purl).toString();
-  } catch (error) {
+  } catch (_) {
     return null;
   }
-};
+}
 
 export function extractPurlsFromCdxBom(sbom: CdxBom): string[] {
   const purlSet = new Set<string>();
@@ -59,7 +59,7 @@ export function extractPurlsFromCdxBom(sbom: CdxBom): string[] {
       if (purl) {
         purlSet.add(purl);
       }
-    } 
+    }
   }
 
   return Array.from(purlSet);
