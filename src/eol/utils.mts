@@ -1,3 +1,5 @@
+import { PackageURL } from 'packageurl-js';
+import type { CdxBom } from '../types/index.mjs';
 import type {
   ComponentStatus,
   EolScanComponentMetadata,
@@ -22,4 +24,28 @@ export function deriveComponentStatus(
   }
 
   return 'OK';
+}
+
+export function extractPurlsFromCdxBom(sbom: CdxBom): string[] {
+  const purlSet = new Set<string>();
+
+  for (const component of sbom.components ?? []) {
+    if (component.purl) {
+      purlSet.add(PackageURL.fromString(component.purl).toString());
+    }
+  }
+
+  for (const dependency of sbom.dependencies ?? []) {
+    if (dependency.ref) {
+      purlSet.add(PackageURL.fromString(dependency.ref).toString());
+    }
+
+    if (dependency.dependsOn) {
+      for (const dep of dependency.dependsOn) {
+        purlSet.add(PackageURL.fromString(dep).toString());
+      }
+    }
+  }
+
+  return Array.from(purlSet);
 }

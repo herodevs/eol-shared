@@ -1,3 +1,5 @@
+import type { CdxBom } from './index.mjs';
+
 export interface CveStats {
   cveId: string;
   cvssScore: number;
@@ -43,7 +45,9 @@ export interface EolReportMutationResponse {
 }
 
 export interface CreateEolReportInput {
-  components: string[];
+  // @deprecated
+  components?: string[];
+  sbom?: CdxBom;
 }
 
 export const VALID_STATUSES = ['UNKNOWN', 'OK', 'EOL', 'EOL_UPCOMING'] as const;
