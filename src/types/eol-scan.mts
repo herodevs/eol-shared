@@ -44,11 +44,18 @@ export interface EolReportMutationResponse {
   eol: { createReport: { success: boolean; report: EolReport | null } };
 }
 
-export interface CreateEolReportInput {
-  // @deprecated
-  components?: string[];
-  sbom?: CdxBom;
+export interface CreateEolReportInputSbom {
+  sbom: CdxBom;
 }
+
+// @deprecated
+export interface CreateEolReportInputPurls {
+  components: string[];
+}
+
+export type CreateEolReportInput =
+  | CreateEolReportInputSbom
+  | CreateEolReportInputPurls;
 
 export const VALID_STATUSES = ['UNKNOWN', 'OK', 'EOL', 'EOL_UPCOMING'] as const;
 export type ComponentStatus = (typeof VALID_STATUSES)[number];

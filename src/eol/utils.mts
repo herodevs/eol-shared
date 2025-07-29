@@ -29,7 +29,7 @@ export function deriveComponentStatus(
 function safeParsePurl(purl: string): string | null {
   try {
     return PackageURL.fromString(purl).toString();
-  } catch (_) {
+  } catch {
     return null;
   }
 }
