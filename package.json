@@ -39,7 +39,8 @@
   "dependencies": {
     "@cyclonedx/cyclonedx-library": "^8.5.0",
     "fast-xml-parser": "^5.2.5",
-    "json-schema-to-typescript": "^15.0.4"
+    "json-schema-to-typescript": "^15.0.4",
+    "packageurl-js": "^2.0.1"
   },
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
