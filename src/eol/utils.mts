@@ -26,25 +26,40 @@ export function deriveComponentStatus(
   return 'OK';
 }
 
+function safeParsePurl(purl: string): string | null {
+  try {
+    return PackageURL.fromString(purl).toString();
+  } catch (error) {
+    return null;
+  }
+};
+
 export function extractPurlsFromCdxBom(sbom: CdxBom): string[] {
   const purlSet = new Set<string>();
 
   for (const component of sbom.components ?? []) {
     if (component.purl) {
-      purlSet.add(PackageURL.fromString(component.purl).toString());
+      const purl = safeParsePurl(component.purl);
+      if (purl) {
+        purlSet.add(purl);
+      }
     }
   }
 
   for (const dependency of sbom.dependencies ?? []) {
     if (dependency.ref) {
-      purlSet.add(PackageURL.fromString(dependency.ref).toString());
-    }
-
-    if (dependency.dependsOn) {
-      for (const dep of dependency.dependsOn) {
-        purlSet.add(PackageURL.fromString(dep).toString());
+      const purl = safeParsePurl(dependency.ref);
+      if (purl) {
+        purlSet.add(purl);
       }
     }
+
+    for (const dep of dependency.dependsOn ?? []) {
+      const purl = safeParsePurl(dep);
+      if (purl) {
+        purlSet.add(purl);
+      }
+    } 
   }
 
   return Array.from(purlSet);
