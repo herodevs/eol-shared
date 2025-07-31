@@ -37,7 +37,7 @@ export interface EolReport {
 }
 
 export interface EolReportQueryResponse {
-  eol: { report: { result: EolReport | null } };
+  eol: { report: { report: EolReport | null } };
 }
 
 export interface EolReportMutationResponse {
