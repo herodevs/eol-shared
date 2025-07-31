@@ -23,6 +23,9 @@ export type {
   ExternalReference,
   Hash,
   License,
+  SPDX23,
+  SupportedBom,
 } from './types/index.mjs';
 
 export { ComponentScope } from './types/index.mjs';
+export { isCdxBom, isSpdxBom, isSupportedBom } from './bom/validation.mjs';
