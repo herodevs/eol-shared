@@ -1,3 +1,6 @@
 {
-  "plugins": ["typescript", "unicorn", "oxc", "node", "promise"]
+  "plugins": ["typescript", "unicorn", "oxc", "node", "promise"],
+  "rules": {
+    "typescript/consistent-type-imports": "error"
+  }
 }

@@ -14,8 +14,10 @@ export interface EolScanComponentMetadata {
 }
 
 export interface NesRemediation {
-  purls: { nes: string; oss: string };
-  urls: { main: string };
+  remediations: {
+    purls: { nes: string; oss: string };
+    urls: { main: string };
+  }[];
 }
 
 export interface EolScanComponent {

@@ -5,7 +5,7 @@ function parseBomOrString(bomOrString: string | object): SupportedBom | null {
   if (typeof bomOrString === 'string') {
     try {
       return JSON.parse(bomOrString);
-    } catch (e) {
+    } catch {
       return null;
     }
   }
