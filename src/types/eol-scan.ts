@@ -1,4 +1,4 @@
-import type { CdxBom } from './index.mjs';
+import type { CdxBom } from './index.js';
 
 export interface CveStats {
   cveId: string;

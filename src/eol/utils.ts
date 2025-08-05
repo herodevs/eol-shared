@@ -1,9 +1,9 @@
 import { PackageURL } from 'packageurl-js';
-import type { CdxBom } from '../types/index.mjs';
+import type { CdxBom } from '../types/index.js';
 import type {
   ComponentStatus,
   EolScanComponentMetadata,
-} from '../types/eol-scan.mjs';
+} from '../types/eol-scan.js';
 
 export function deriveComponentStatus(
   metadata: EolScanComponentMetadata | null,

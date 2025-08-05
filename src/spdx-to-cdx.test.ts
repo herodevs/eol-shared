@@ -1,8 +1,8 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { spdxToCdxBom } from './spdx-to-cdx.mts';
+import { spdxToCdxBom } from './spdx-to-cdx.ts';
 import type { SPDX23 } from './types/bom/spdx-2.3.schema.js';
-import type { Component, Dependency } from './types/index.mts';
+import type { Component, Dependency } from './types/index.ts';
 
 function buildSpdxAndConvert(spdx: Partial<SPDX23>) {
   const baseSpdx: SPDX23 = {

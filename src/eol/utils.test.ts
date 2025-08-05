@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { deriveComponentStatus } from './utils.mts';
-import type { EolScanComponentMetadata } from '../types/eol-scan.mts';
+import { deriveComponentStatus } from './utils.ts';
+import type { EolScanComponentMetadata } from '../types/eol-scan.ts';
 
 describe('deriveComponentStatus', () => {
   test('should return UNKNOWN when there is no metadata', () => {
