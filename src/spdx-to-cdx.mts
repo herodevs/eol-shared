@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { Enums } from '@cyclonedx/cyclonedx-library';
 import type * as CDX from '@cyclonedx/cyclonedx-library';
 import type { SPDX23 } from './types/bom/spdx-2.3.schema.js';
@@ -70,7 +69,7 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     $schema: 'http://cyclonedx.org/schema/bom-1.5.schema.json',
     bomFormat: 'CycloneDX',
     specVersion: '1.5',
-    serialNumber: `urn:uuid:${randomUUID()}`,
+    serialNumber: `urn:uuid:${crypto.randomUUID()}`,
     version: 1,
     metadata: {
       timestamp: spdx.creationInfo.created,
