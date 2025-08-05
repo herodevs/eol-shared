@@ -1,4 +1,4 @@
-import type { CdxBom } from './types/index.mts';
+import type { CdxBom } from './types/index.ts';
 
 /**
  * Creates a trimmed copy of a CycloneDX BOM by removing SBOM data not necessary for EOL scanning.

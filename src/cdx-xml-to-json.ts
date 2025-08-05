@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { CdxBom } from './index.mts';
+import type { CdxBom } from './index.ts';
 
 const COLLECTION_KEYS = [
   'tools',

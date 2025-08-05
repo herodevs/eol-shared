@@ -1,5 +1,5 @@
 import type { SPDX23 } from '../types/bom/spdx-2.3.schema.ts';
-import type { CdxBom, SupportedBom } from '../types/index.mjs';
+import type { CdxBom, SupportedBom } from '../types/index.js';
 
 function parseBomOrString(bomOrString: string | object): SupportedBom | null {
   if (typeof bomOrString === 'string') {

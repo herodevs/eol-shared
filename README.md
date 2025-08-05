@@ -14,7 +14,7 @@ npm install github:herodevs/eol-shared
 
 ## API
 
-### [`spdxToCdxBom(spdxBom: SPDX23): CdxBom`](./src/spdx-to-cdx.mts#L61)
+### [`spdxToCdxBom(spdxBom: SPDX23): CdxBom`](./src/spdx-to-cdx.ts#L61)
 
 Converts an SPDX BOM to CycloneDX format. This conversion takes the most important package and relationship data from SPDX and translates them into CycloneDX components and dependencies as closely as possible.
 
@@ -31,7 +31,7 @@ const cdxBom: CdxBom = spdxToCdxBom(spdxBom);
 **Parameters**: `spdxBom` - The SPDX BOM object to convert  
 **Returns**: A CycloneDX BOM object
 
-### [`xmlStringToJSON(xmlString: string): CdxBom`](./src/cdx-xml-to-json.mts#L161)
+### [`xmlStringToJSON(xmlString: string): CdxBom`](./src/cdx-xml-to-json.ts#L161)
 
 Converts a CycloneDX XML string to a JSON object. The CycloneDX spec does not change between formats, so conversion from XML to JSON is lossless.
 
@@ -46,7 +46,7 @@ const jsonBom: CdxBom = xmlStringToJSON(xmlString);
 **Parameters**: `xmlString` - The XML string to parse  
 **Returns**: The parsed CycloneDX BOM object
 
-### [`trimCdxBom(cdxBom: CdxBom): CdxBom`](./src/trim-cdx-bom.mts#L3)
+### [`trimCdxBom(cdxBom: CdxBom): CdxBom`](./src/trim-cdx-bom.ts#L3)
 
 Creates a trimmed copy of a CycloneDX BOM by removing SBOM data not necessary for EOL scanning:
 

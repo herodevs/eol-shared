@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
-import { xmlStringToJSON } from './cdx-xml-to-json.mts';
+import { xmlStringToJSON } from './cdx-xml-to-json.ts';
 
 describe('CycloneDX XML to JSON Converter', () => {
   test('should convert CycloneDX 1.4 XML to JSON with correct structure', async () => {
