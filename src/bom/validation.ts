@@ -16,6 +16,7 @@ export function isCdxBom(bomOrString: string | object): bomOrString is CdxBom {
   const bom = parseBomOrString(bomOrString);
   return (
     bom !== null &&
+    typeof bom === 'object' &&
     'components' in bom &&
     'bomFormat' in bom &&
     bom.bomFormat === 'CycloneDX'
@@ -24,7 +25,15 @@ export function isCdxBom(bomOrString: string | object): bomOrString is CdxBom {
 
 export function isSpdxBom(bomOrString: string | object): bomOrString is SPDX23 {
   const bom = parseBomOrString(bomOrString);
-  return bom !== null && 'SPDXID' in bom && bom.SPDXID === 'SPDXRef-Document';
+  return (
+    bom !== null &&
+    typeof bom === 'object' &&
+    'SPDXID' in bom &&
+    bom.SPDXID === 'SPDXRef-DOCUMENT' &&
+    'spdxVersion' in bom &&
+    typeof bom.spdxVersion === 'string' &&
+    bom.spdxVersion.startsWith('SPDX-')
+  );
 }
 
 export function isSupportedBom(
