@@ -10,7 +10,7 @@ export interface EolScanComponentMetadata {
   isEol: boolean;
   eolAt: string | null;
   eolReasons: string[];
-  cve: CveStats[];
+  cveStats: CveStats[];
 }
 
 export interface NesRemediation {
