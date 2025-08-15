@@ -34,6 +34,7 @@
     "lint:fix": "oxlint --fix --fix-suggestions",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
+    "type-check": "tsc --noEmit",
     "download-schemas": "node scripts/sbom-schema-downloader.js",
     "prepare": "npm run build"
   },

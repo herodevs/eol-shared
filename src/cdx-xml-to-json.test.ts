@@ -23,17 +23,17 @@ describe('CycloneDX XML to JSON Converter', () => {
     assert.equal(result.version, 1);
 
     // Metadata validation
-    assert(Array.isArray(result.metadata.tools));
-    assert(result.metadata.tools.length >= 2);
+    assert(Array.isArray(result.metadata?.tools));
+    assert(result.metadata?.tools.length >= 2);
 
-    const firstTool = result.metadata.tools[0];
+    const firstTool = result.metadata?.tools[0]!;
     assert.equal(firstTool.vendor, '@cyclonedx');
     assert.equal(firstTool.name, 'cyclonedx-library');
 
     // Component validation
     const component = result.metadata.component;
     assert(!Array.isArray(component));
-    assert.equal(component.type, 'application');
+    assert.equal(component?.type, 'application');
     assert.equal(component['bom-ref'], 'juice-shop@14.1.1');
 
     // Components array validation
@@ -53,8 +53,8 @@ describe('CycloneDX XML to JSON Converter', () => {
 
       assert.equal(result.bomFormat, 'CycloneDX');
       assert.equal(result.specVersion, version);
-      assert(Array.isArray(result.metadata.tools));
-      assert(!Array.isArray(result.metadata.component));
+      assert(Array.isArray(result.metadata?.tools));
+      assert(!Array.isArray(result.metadata?.component));
     }
   });
 });
