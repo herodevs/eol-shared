@@ -26,9 +26,9 @@ describe('CycloneDX XML to JSON Converter', () => {
     assert(Array.isArray(result.metadata?.tools));
     assert(result.metadata?.tools.length >= 2);
 
-    const firstTool = result.metadata?.tools[0]!;
-    assert.equal(firstTool.vendor, '@cyclonedx');
-    assert.equal(firstTool.name, 'cyclonedx-library');
+    const firstTool = result.metadata?.tools[0];
+    assert.equal(firstTool?.vendor, '@cyclonedx');
+    assert.equal(firstTool?.name, 'cyclonedx-library');
 
     // Component validation
     const component = result.metadata.component;
