@@ -3,6 +3,18 @@ import { strict as assert } from 'node:assert';
 import { deriveComponentStatus } from './utils.ts';
 import type { EolScanComponentMetadata } from '../types/eol-scan.ts';
 
+// These are required for the object but not used to derive the status
+const defaultMetadataProps = {
+  eolReasons: [],
+  cveStats: [],
+  ecosystem: 'npm',
+  releasedAt: new Date(),
+  isNesPackage: false,
+  nextSupportedVersion: null,
+  daysBehindNextSupported: null,
+  majorVersionsFromNextSupported: null,
+};
+
 describe('deriveComponentStatus', () => {
   test('should return UNKNOWN when there is no metadata', () => {
     const result = deriveComponentStatus(null);
@@ -11,10 +23,9 @@ describe('deriveComponentStatus', () => {
 
   test('should return EOL when isEol is true', () => {
     const metadata: EolScanComponentMetadata = {
+      ...defaultMetadataProps,
       isEol: true,
       eolAt: null,
-      eolReasons: ['End of life'],
-      cve: [],
     };
 
     const result = deriveComponentStatus(metadata);
@@ -23,10 +34,9 @@ describe('deriveComponentStatus', () => {
 
   test('should return EOL when eolAt is in the past', () => {
     const metadata: EolScanComponentMetadata = {
+      ...defaultMetadataProps,
       isEol: false,
       eolAt: '2020-01-01T00:00:00.000Z',
-      eolReasons: ['End of life'],
-      cve: [],
     };
 
     const result = deriveComponentStatus(metadata);
@@ -36,10 +46,9 @@ describe('deriveComponentStatus', () => {
   test('should return EOL when eolAt is current date', () => {
     const currentDate = new Date().toISOString();
     const metadata: EolScanComponentMetadata = {
+      ...defaultMetadataProps,
       isEol: false,
       eolAt: currentDate,
-      eolReasons: [],
-      cve: [],
     };
 
     const result = deriveComponentStatus(metadata);
@@ -51,10 +60,9 @@ describe('deriveComponentStatus', () => {
     futureDate.setFullYear(futureDate.getFullYear() + 1);
 
     const metadata: EolScanComponentMetadata = {
+      ...defaultMetadataProps,
       isEol: false,
       eolAt: futureDate.toISOString(),
-      eolReasons: [],
-      cve: [],
     };
 
     const result = deriveComponentStatus(metadata);
@@ -63,10 +71,9 @@ describe('deriveComponentStatus', () => {
 
   test('should return OK when isEol is false and eolAt is null', () => {
     const metadata: EolScanComponentMetadata = {
+      ...defaultMetadataProps,
       isEol: false,
       eolAt: null,
-      eolReasons: [],
-      cve: [],
     };
 
     const result = deriveComponentStatus(metadata);
