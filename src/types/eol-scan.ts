@@ -10,7 +10,19 @@ export interface EolScanComponentMetadata {
   isEol: boolean;
   eolAt: string | null;
   eolReasons: string[];
+  ecosystem: string | null;
   cveStats: CveStats[];
+  releasedAt: Date | null;
+  isNesPackage: boolean;
+  nextSupportedVersion: EolScanNextSupportedVersion | null;
+  daysBehindNextSupported: number | null;
+  majorVersionsFromNextSupported: number | null;
+}
+
+export interface EolScanNextSupportedVersion {
+  purl: string;
+  version: string;
+  releasedAt: Date;
 }
 
 export interface NesRemediation {
@@ -29,21 +41,24 @@ export interface EolScanComponent {
 export interface EolReportMetadata {
   totalComponentsCount: number;
   unknownComponentsCount: number;
+  totalUniqueComponentsCount: number;
 }
 
 export interface EolReport {
-  id?: string;
+  id: string;
   createdOn: string;
   components: EolScanComponent[];
   metadata: EolReportMetadata;
+  page: number;
+  totalRecords: number;
 }
 
 export interface EolReportQueryResponse {
-  eol: { report: { report: EolReport | null } };
+  eol: { report: EolReport | null };
 }
 
 export interface EolReportMutationResponse {
-  eol: { createReport: { success: boolean; report: EolReport | null } };
+  eol: { createReport: { success: boolean; id: string; totalRecords: number } };
 }
 
 export interface CreateEolReportInputSbom {
@@ -58,6 +73,12 @@ export interface CreateEolReportInputPurls {
 export type CreateEolReportInput =
   | CreateEolReportInputSbom
   | CreateEolReportInputPurls;
+
+export interface GetEolReportInput {
+  id: string;
+  page?: number;
+  size?: number;
+}
 
 export const VALID_STATUSES = ['UNKNOWN', 'OK', 'EOL', 'EOL_UPCOMING'] as const;
 export type ComponentStatus = (typeof VALID_STATUSES)[number];
