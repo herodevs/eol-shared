@@ -2,7 +2,7 @@ import type { CdxBom } from './index.js';
 
 export interface CveStats {
   cveId: string;
-  cvssScore: number;
+  cvssScore: string | null;
   publishedAt: string;
 }
 
