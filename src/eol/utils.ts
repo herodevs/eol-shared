@@ -15,6 +15,10 @@ export function deriveComponentStatus(
   const eolAt = metadata.eolAt ?? '';
   const now = new Date().toISOString();
 
+  if (metadata.isNesPackage) {
+    return 'NES_PACKAGE';
+  }
+
   if (metadata.isEol || (eolAt && eolAt <= now)) {
     return 'EOL';
   }

@@ -80,5 +80,11 @@ export interface GetEolReportInput {
   size?: number;
 }
 
-export const VALID_STATUSES = ['UNKNOWN', 'OK', 'EOL', 'EOL_UPCOMING'] as const;
+export const VALID_STATUSES = [
+  'UNKNOWN',
+  'OK',
+  'EOL',
+  'EOL_UPCOMING',
+  'NES_PACKAGE',
+] as const;
 export type ComponentStatus = (typeof VALID_STATUSES)[number];
