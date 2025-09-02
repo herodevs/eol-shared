@@ -29,14 +29,13 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "test": "node --test --experimental-strip-types --experimental-test-coverage src/**/*.test.*",
+    "test": "node --test --experimental-strip-types --experimental-test-coverage src/*.test.*",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix --fix-suggestions",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "type-check": "tsc --noEmit",
-    "download-schemas": "node scripts/sbom-schema-downloader.js",
-    "prepare": "npm run build"
+    "download-schemas": "node scripts/sbom-schema-downloader.js"
   },
   "dependencies": {
     "@cyclonedx/cyclonedx-library": "^8.5.0",
