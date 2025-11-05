@@ -13,7 +13,6 @@ export function trimCdxBom(cdxBom: CdxBom): CdxBom {
     component.externalReferences = [];
     component.evidence = {};
     component.hashes = [];
-    component.properties = [];
   }
 
   return newBom;
