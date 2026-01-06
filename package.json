@@ -38,17 +38,17 @@
     "download-schemas": "node scripts/sbom-schema-downloader.js"
   },
   "dependencies": {
-    "@cyclonedx/cyclonedx-library": "^8.5.0",
-    "fast-xml-parser": "^5.2.5",
+    "@cyclonedx/cyclonedx-library": "^9.4.1",
+    "fast-xml-parser": "^5.3.3",
     "json-schema-to-typescript": "^15.0.4",
     "packageurl-js": "^2.0.1"
   },
   "devDependencies": {
-    "@prettier/plugin-oxc": "^0.0.4",
-    "@types/node": "^24.0.14",
-    "oxlint": "^1.6.0",
-    "prettier": "^3.6.2",
-    "typescript": "^5.8.3"
+    "@prettier/plugin-oxc": "^0.1.3",
+    "@types/node": "^25.0.3",
+    "oxlint": "^1.38.0",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=22"
