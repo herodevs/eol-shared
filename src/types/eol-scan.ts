@@ -63,6 +63,7 @@ export interface EolReportMutationResponse {
 
 export interface CreateEolReportInputSbom {
   sbom: CdxBom;
+  scanOrigin?: string;
 }
 
 // @deprecated
