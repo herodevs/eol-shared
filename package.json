@@ -27,6 +27,7 @@
     "url": "git+https://github.com/herodevs/eol-shared.git"
   },
   "scripts": {
+    "prepare": "npm run build",
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "test": "node --test --experimental-strip-types --experimental-test-coverage src/*.test.*",
