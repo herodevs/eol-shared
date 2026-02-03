@@ -153,7 +153,7 @@ describe('spdxToCdxBom', () => {
       assert.deepStrictEqual(result.metadata?.component, {
         'bom-ref': '@herodevs/eol-report-card@1.0.0',
         type: 'library',
-        name: '@herodevs/eol-report-card',
+        name: 'test-document',
         version: '1.0.0',
         description: '',
         purl: '',
@@ -167,6 +167,226 @@ describe('spdxToCdxBom', () => {
 
       // Non-root components should be in components array
       assert(result.components?.find((c) => c.name === 'some-dependency'));
+    });
+
+    test('should use SPDX document name for metadata component name', () => {
+      const result = buildSpdxAndConvert({
+        name: 'My Application',
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: '@herodevs/eol-report-card',
+            versionInfo: '1.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(result.metadata?.component?.name, 'My Application');
+    });
+
+    test('should preserve SPDX document name as-is (no version stripping)', () => {
+      const result = buildSpdxAndConvert({
+        name: 'Awesome App v1.2.3-beta.1',
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: '@herodevs/eol-report-card',
+            versionInfo: '1.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(
+        result.metadata?.component?.name,
+        'Awesome App v1.2.3-beta.1',
+      );
+    });
+
+    test('should fall back to package name when document name is blank', () => {
+      const result = buildSpdxAndConvert({
+        name: '   ',
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: '@herodevs/eol-report-card',
+            versionInfo: '1.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(
+        result.metadata?.component?.name,
+        '@herodevs/eol-report-card',
+      );
+    });
+
+    test('should use version-only document name as-is (no fallback)', () => {
+      const result = buildSpdxAndConvert({
+        name: 'v1.2.3',
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: '@herodevs/eol-report-card',
+            versionInfo: '1.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(result.metadata?.component?.name, 'v1.2.3');
+    });
+
+    test('should strip version from package name when falling back', () => {
+      const cases = [
+        { packageName: 'myapp@1.2.3', expected: 'myapp' },
+        { packageName: 'myapp v1.0.0', expected: 'myapp' },
+        { packageName: 'myapp-1.2.3', expected: 'myapp' },
+        { packageName: 'my-app (v2.0.0)', expected: 'my-app' },
+      ];
+      for (const { packageName, expected } of cases) {
+        const result = buildSpdxAndConvert({
+          name: '', // Empty document name forces fallback
+          documentDescribes: ['SPDXRef-Package-root'],
+          packages: [
+            {
+              SPDXID: 'SPDXRef-Package-root',
+              name: packageName,
+              versionInfo: '1.0.0',
+              downloadLocation: 'NOASSERTION',
+            },
+          ],
+        });
+
+        assert.equal(
+          result.metadata?.component?.name,
+          expected,
+          `Failed for package name: ${packageName}`,
+        );
+      }
+    });
+
+    test('should handle Java/Maven style document names as-is', () => {
+      const result = buildSpdxAndConvert({
+        name: 'org.springframework:spring-core-6.0.0',
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: 'org.springframework:spring-core',
+            versionInfo: '6.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(
+        result.metadata?.component?.name,
+        'org.springframework:spring-core-6.0.0',
+      );
+    });
+
+    test('should handle Java JAR-style names with versions', () => {
+      const result = buildSpdxAndConvert({
+        name: '', // Empty to test fallback
+        documentDescribes: ['SPDXRef-Package-root'],
+        packages: [
+          {
+            SPDXID: 'SPDXRef-Package-root',
+            name: 'spring-core-6.0.0',
+            versionInfo: '6.0.0',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(result.metadata?.component?.name, 'spring-core');
+    });
+
+    test('synthetic component should NOT be in dependencies array', () => {
+      const result = buildSpdxAndConvert({
+        name: 'My App',
+        packages: [
+          {
+            SPDXID: 'SPDXRef-pkg',
+            name: 'lodash',
+            versionInfo: '4.17.21',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(result.metadata?.component?.name, 'My App');
+      assert.equal(
+        result.dependencies?.find((d) => d.ref === 'My App'),
+        undefined,
+      );
+    });
+
+    test('synthetic component should have type application', () => {
+      const result = buildSpdxAndConvert({ name: 'My App', packages: [] });
+
+      assert.equal(result.metadata?.component?.type, 'application');
+    });
+
+    test('should preserve document name as-is (various formats)', () => {
+      const cases = [
+        '@scope/pkg@1.0.0',
+        'My App v2.0.0',
+        'Project-1.0.0-beta.1',
+        'App version 3.0',
+        'My App (v2.0.0)',
+        'My App [2.0.0]',
+        'Project 2024',
+      ];
+      for (const input of cases) {
+        const result = buildSpdxAndConvert({ name: input, packages: [] });
+        assert.equal(
+          result.metadata?.component?.name,
+          input,
+          `Failed for: ${input}`,
+        );
+      }
+    });
+
+    test('package component names should NOT use document name', () => {
+      const result = buildSpdxAndConvert({
+        name: 'My App v1.0.0',
+        packages: [
+          {
+            SPDXID: 'SPDXRef-pkg',
+            name: 'lodash',
+            versionInfo: '4.17.21',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+      });
+
+      assert.equal(result.components?.[0]?.name, 'lodash');
+    });
+
+    test('should have undefined metadata.component when no root package and no document name', () => {
+      const result = buildSpdxAndConvert({
+        name: '', // Empty document name
+        packages: [
+          {
+            SPDXID: 'SPDXRef-pkg',
+            name: 'lodash',
+            versionInfo: '4.17.21',
+            downloadLocation: 'NOASSERTION',
+          },
+        ],
+        // No documentDescribes
+      });
+
+      assert.equal(result.metadata?.component, undefined);
+      assert.equal(result.components?.length, 1);
     });
   });
 
@@ -606,6 +826,7 @@ describe('spdxToCdxBom', () => {
   describe('Root Component Identification', () => {
     test('should identify root component from documentDescribes', () => {
       const result = buildSpdxAndConvert({
+        name: 'my-app',
         documentDescribes: ['SPDXRef-Package-root'],
         packages: [
           {
@@ -667,7 +888,7 @@ describe('spdxToCdxBom', () => {
         ],
       });
 
-      assert.equal(result.metadata?.component, undefined);
+      assert.equal(result.metadata?.component?.name, 'test-document');
       assert.equal(result.components?.length, 1);
     });
 
@@ -691,7 +912,10 @@ describe('spdxToCdxBom', () => {
       });
 
       // Should take the last one as root (implementation overwrites rootComponent)
-      assert.equal(result.metadata?.component?.name, 'second-root');
+      assert.equal(
+        result.metadata?.component?.['bom-ref'],
+        'second-root@2.0.0',
+      );
       // Both components marked as root, so neither goes to components array
       assert.equal(result.components?.length, 0);
     });
@@ -1155,6 +1379,7 @@ describe('spdxToCdxBom', () => {
   describe('Integration Tests', () => {
     test('should convert complete real-world SPDX BOM', () => {
       const complexSpdx = {
+        name: '@my/app',
         documentDescribes: ['SPDXRef-Package-root'],
         packages: [
           {
@@ -1292,7 +1517,13 @@ describe('spdxToCdxBom', () => {
 
       assert.deepStrictEqual(result.components, []);
       assert.deepStrictEqual(result.dependencies, []);
-      assert.equal(result.metadata?.component, undefined);
+      assert.deepStrictEqual(result.metadata?.component, {
+        'bom-ref': 'test-document',
+        type: 'application',
+        name: 'test-document',
+        version: '',
+        description: '',
+      });
     });
 
     test('should handle components with special characters in names', () => {
