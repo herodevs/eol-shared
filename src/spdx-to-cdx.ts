@@ -37,6 +37,11 @@ const algorithmMap: Record<string, Enums.HashAlgorithm> = {
 
 const LICENSE_EXPRESSION_REGEX = /\b(AND|OR|WITH)\b|\(|\)/;
 const TOOL_NAME_REGEX = /^(.+)[-@](\d.*)$/;
+// Remove common trailing version suffixes like "App v1.2.3", "pkg@1.0.0", "(version 2)" etc.
+const TRAILING_VERSION_REGEXES = [
+  /(?:^|[\s\-_.()\[\]@])v(?:ersion)?\.?\s*\d+(?:\.\d+)*(?:[-+_.][0-9A-Za-z.-]+)?(?:\s*[\)\]\}])?$/i,
+  /(?:^|[\s\-_.()\[\]@])\d+\.\d+(?:\.\d+)*(?:[-+_.][0-9A-Za-z.-]+)?(?:\s*[\)\]\}])?$/i,
+];
 
 function upgrade(c: Component, next: Scope) {
   if (!c.scope || rank[next] > rank[c.scope]) c.scope = next;
@@ -56,6 +61,32 @@ function mapScope(rel: string): Scope {
     default:
       return Enums.ComponentScope.Required;
   }
+}
+
+function stripVersionSuffix(name?: string): string | null {
+  const trimmedName = name?.trim();
+  if (!trimmedName) return null;
+
+  for (const regex of TRAILING_VERSION_REGEXES) {
+    const sanitized = trimmedName.replace(regex, '').trim();
+    if (sanitized !== trimmedName) {
+      return sanitized || null;
+    }
+  }
+
+  return trimmedName;
+}
+
+function resolveMetadataComponentName(
+  spdxDocumentName: string | undefined,
+  rootComponentName: string | null,
+): string | null {
+  const documentName = spdxDocumentName?.trim();
+  if (documentName) return documentName;
+  if (rootComponentName) {
+    return stripVersionSuffix(rootComponentName) || rootComponentName;
+  }
+  return null;
 }
 
 /**
@@ -156,9 +187,27 @@ export function spdxToCdxBom(spdx: SPDX23): CdxBom {
     idx.set(p.SPDXID, component);
   }
 
-  if (rootComponent) {
-    bom.metadata!.component = rootComponent;
+  const metadataName = resolveMetadataComponentName(
+    spdx.name,
+    rootComponent?.name ?? null,
+  );
+
+  if (rootComponent && metadataName) {
+    rootComponent.name = metadataName;
   }
+
+  if (rootComponent || metadataName) {
+    bom.metadata!.component =
+      rootComponent ||
+      ({
+        'bom-ref': metadataName,
+        type: Enums.ComponentType.Application,
+        name: metadataName,
+        version: '',
+        description: '',
+      } as Component);
+  }
+
   const deps = new Map<string, Dependency>();
 
   for (const component of idx.values()) {
