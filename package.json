@@ -1,0 +1,38 @@
+{
+  "name": "@herodevs/eol-shared",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/herodevs/eol-shared#readme",
+  "bugs": {
+    "url": "https://github.com/herodevs/eol-shared/issues"
+  },
+  "license": "ISC",
+  "author": "HeroDevs, Inc.",
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/herodevs/eol-shared.git"
+  },
+  "dependencies": {
+    "@cyclonedx/cyclonedx-library": "^9.4.1",
+    "fast-xml-parser": "^5.3.3",
+    "json-schema-to-typescript": "^15.0.4",
+    "packageurl-js": "^2.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
