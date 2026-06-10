@@ -32,10 +32,45 @@ export interface NesRemediation {
   }[];
 }
 
+export type RemediationType =
+  | 'nes_available'
+  | 'nes_ready'
+  | 'version_update'
+  | 'package_replacement';
+
+export type RemediationActionType =
+  | 'direct'
+  | 'contact'
+  | 'enterprise_portal'
+  | 'automated'
+  | 'reference';
+
+export interface RemediationAction {
+  type: RemediationActionType;
+  url?: string;
+}
+
+export interface RemediationTarget {
+  purl: string;
+  version?: string | null;
+  releasedAt?: string | null;
+  publishPurl?: string | null;
+  nesPurl?: string | null;
+  ossPurl?: string | null;
+}
+
+export interface Remediation {
+  type: RemediationType;
+  description: string;
+  action: RemediationAction;
+  target?: RemediationTarget;
+}
+
 export interface EolScanComponent {
   metadata: EolScanComponentMetadata | null;
   purl: string;
   nesRemediation?: NesRemediation | null;
+  remediations?: Remediation[] | null;
 }
 
 export interface EolReportMetadata {
