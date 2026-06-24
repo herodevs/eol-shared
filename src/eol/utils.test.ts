@@ -194,17 +194,17 @@ describe('canonicalizePurl', () => {
     });
   });
 
-  // --- Version byte-preservation ---
+  // --- Version value preservation ---
 
-  describe('version byte-preservation', () => {
-    test('version with mixed case is not modified — exact canonical output', () => {
+  describe('version value preservation', () => {
+    test('version with mixed case is not case-folded — exact canonical output', () => {
       assert.equal(
         canonicalizePurl('pkg:nuget/serilog@2.0.0-Beta3'),
         'pkg:nuget/serilog@2.0.0-Beta3',
       );
     });
 
-    test('version with +build metadata is not modified — exact canonical output', () => {
+    test('version with +build metadata preserves value — exact canonical output', () => {
       assert.equal(
         canonicalizePurl('pkg:maven/g/a@1.0.0+build5'),
         'pkg:maven/g/a@1.0.0+build5',

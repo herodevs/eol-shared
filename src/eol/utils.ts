@@ -28,8 +28,9 @@ const CASE_INSENSITIVE_TYPES = new Set(['nuget', 'composer', 'cargo', 'npm']);
  *   4. Reconstruct with new PackageURL(...).toString() — the library serializes
  *      qualifiers and subpath with canonical percent-encoding.
  *
- * Version is byte-preserved. Qualifiers and subpath are canonically re-encoded
- * by the serializer (deterministic and idempotent).
+ * Version value is preserved; reserved-character encoding may be canonicalized.
+ * Qualifiers and subpath are canonically re-encoded by the serializer
+ * (deterministic and idempotent).
  *
  * Returns the input unchanged for unparseable strings; never throws.
  *
