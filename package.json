@@ -30,7 +30,7 @@
     "prepare": "npm run build",
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "test": "node --test --experimental-strip-types --experimental-test-coverage src/*.test.*",
+    "test": "node --test --experimental-strip-types --experimental-test-coverage 'src/**/*.test.*'",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix --fix-suggestions",
     "format:check": "prettier --check .",
