@@ -16,70 +16,225 @@ const PURL_TYPE_ALIASES: Record<string, string> = {
 // golang, maven, gem, pypi, pub, and all others are EXCLUDED — their paths are case-sensitive.
 const CASE_INSENSITIVE_TYPES = new Set(['nuget', 'composer', 'cargo', 'npm']);
 
+export type PurlIdentity = {
+  rawPurl: string;
+  canonicalComponentPurl: string;
+  canonicalVersionPurl?: string;
+  legacyComponentPurl?: string;
+};
+
+export type VersionedPurlFilter = {
+  contextPurls: string[];
+  resultPurls?: string[];
+};
+
+export type NormalizePurlIdentityVersionMode = 'preserve' | 'omit';
+
+export type NormalizePurlIdentityOptions = {
+  version: NormalizePurlIdentityVersionMode;
+  onUncanonicalized?: ((purl: string, error: unknown) => void) | undefined;
+};
+
+type ParsedPurlIdentity = {
+  type: string;
+  namespace: string | undefined;
+  name: string;
+  version: string | undefined;
+  qualifiers: Record<string, string> | undefined;
+  subpath: string | undefined;
+};
+
+function notifyUncanonicalized(
+  purl: string,
+  error: unknown,
+  onUncanonicalized?: (purl: string, error: unknown) => void,
+): void {
+  try {
+    onUncanonicalized?.(purl, error);
+  } catch {
+    // A misbehaving callback must not break the identity path.
+  }
+}
+
+function normalizeParsedPurlIdentity(purl: string): ParsedPurlIdentity | null {
+  const [rawType, rawNamespace, rawName, rawVersion, rawQualifiers, rawSubpath] =
+    PackageURL.parseString(purl);
+
+  const type = PackageURL.Component.type.normalize(rawType);
+  const name = PackageURL.Component.name.normalize(rawName);
+
+  if (!type || !name) {
+    return null;
+  }
+
+  return {
+    type: PURL_TYPE_ALIASES[type] ?? type,
+    namespace:
+      PackageURL.Component.namespace.normalize(rawNamespace) ?? undefined,
+    name,
+    version: PackageURL.Component.version.normalize(rawVersion) ?? undefined,
+    qualifiers:
+      (PackageURL.Component.qualifiers.normalize(rawQualifiers) as
+        | Record<string, string>
+        | undefined) ?? undefined,
+    subpath: PackageURL.Component.subpath.normalize(rawSubpath) ?? undefined,
+  };
+}
+
+function applyCaseNormalization(parts: ParsedPurlIdentity): ParsedPurlIdentity {
+  if (!CASE_INSENSITIVE_TYPES.has(parts.type)) {
+    return parts;
+  }
+
+  return {
+    ...parts,
+    namespace: parts.namespace?.toLowerCase(),
+    name: parts.name.toLowerCase(),
+  };
+}
+
+function serializePurlIdentityParts(parts: ParsedPurlIdentity): string {
+  let purl = `pkg:${PackageURL.Component.type.encode(parts.type)}/`;
+
+  if (parts.namespace) {
+    purl += `${PackageURL.Component.namespace.encode(parts.namespace)}/`;
+  }
+
+  purl += PackageURL.Component.name.encode(parts.name);
+
+  if (parts.version) {
+    purl += `@${PackageURL.Component.version.encode(parts.version)}`;
+  }
+
+  if (parts.qualifiers) {
+    purl += `?${PackageURL.Component.qualifiers.encode(parts.qualifiers)}`;
+  }
+
+  if (parts.subpath) {
+    purl += `#${PackageURL.Component.subpath.encode(parts.subpath)}`;
+  }
+
+  return purl;
+}
+
 /**
- * Normalizes a PURL string to its canonical identity form.
+ * Normalizes a PURL string to this package's canonical identity form.
  *
- * Applies, in order:
- *   1. Parse with PackageURL.fromString — the library handles version isolation,
- *      qualifier/subpath separation, and percent-encoding correctly.
- *   2. Type-alias translation (go → golang, rubygems → gem).
- *   3. Ecosystem-aware case normalization (namespace + name lowercased for
- *      nuget, composer, cargo, npm only).
- *   4. Reconstruct with new PackageURL(...).toString() — the library serializes
- *      qualifiers and subpath with canonical percent-encoding.
- *
- * Version value is preserved; reserved-character encoding may be canonicalized.
- * Qualifiers and subpath are canonically re-encoded by the serializer
- * (deterministic and idempotent).
+ * The implementation parses with packageurl-js and uses its component-level
+ * normalizers/encoders, but intentionally avoids PackageURL construction for
+ * identity serialization. That keeps versionless component identities portable
+ * for ecosystems whose type validators require a version, such as Swift.
  *
  * Returns the input unchanged for unparseable strings; never throws.
- *
- * The optional `onUncanonicalized` callback is invoked when the PURL parses
- * successfully but cannot be re-serialized into canonical form (e.g. the
- * packageurl-js golang validator limitation on bare-major versions like `@v1`).
- * It is NOT invoked on parse failures (non-PURL / malformed input — those
- * are silent passthroughs) and NOT invoked on success. A callback that
- * itself throws is silently ignored so it cannot break the identity path.
  */
-export function canonicalizePurl(
+export function normalizePurlIdentity(
   purl: string,
-  onUncanonicalized?: (purl: string, error: unknown) => void,
+  options: NormalizePurlIdentityOptions = { version: 'preserve' },
 ): string {
-  let parsed: PackageURL;
+  let parts: ParsedPurlIdentity | null;
   try {
-    parsed = PackageURL.fromString(purl);
+    parts = normalizeParsedPurlIdentity(purl);
   } catch {
     // Input is not a parseable PURL — return it unchanged. This is expected for
     // non-PURL input and is intentionally not reported via onUncanonicalized.
     return purl;
   }
 
-  try {
-    const type = PURL_TYPE_ALIASES[parsed.type] ?? parsed.type;
-    let namespace = parsed.namespace;
-    let name = parsed.name;
-    if (CASE_INSENSITIVE_TYPES.has(type)) {
-      namespace = namespace ? namespace.toLowerCase() : namespace;
-      name = name.toLowerCase();
-    }
-    return new PackageURL(
-      type,
-      namespace ?? undefined,
-      name,
-      parsed.version ?? undefined,
-      parsed.qualifiers ?? undefined,
-      parsed.subpath ?? undefined,
-    ).toString();
-  } catch (error) {
-    // The PURL parsed but could not be re-serialized into canonical form.
-    // Return it unchanged and notify the caller so the anomaly is observable.
-    try {
-      onUncanonicalized?.(purl, error);
-    } catch {
-      // A misbehaving callback must not break the identity path.
-    }
+  if (!parts) {
     return purl;
   }
+
+  try {
+    const normalized = applyCaseNormalization({
+      ...parts,
+      version: options.version === 'omit' ? undefined : parts.version,
+    });
+
+    return serializePurlIdentityParts(normalized);
+  } catch (error) {
+    // The PURL parsed but could not be normalized or serialized into canonical
+    // identity form. Return it unchanged and notify the caller so the anomaly
+    // is observable.
+    notifyUncanonicalized(purl, error, options.onUncanonicalized);
+    return purl;
+  }
+}
+
+function rawComponentPurlFromParsed(
+  purl: string,
+  parsed: ParsedPurlIdentity,
+): string {
+  const identityEnd = purl.search(/[?#]/);
+  const identityPart = identityEnd === -1 ? purl : purl.slice(0, identityEnd);
+  const identityTail = identityEnd === -1 ? '' : purl.slice(identityEnd);
+
+  if (!parsed.version) {
+    return purl;
+  }
+
+  const versionSeparator = identityPart.lastIndexOf('@');
+  return versionSeparator === -1
+    ? purl
+    : `${identityPart.slice(0, versionSeparator)}${identityTail}`;
+}
+
+export function createPurlIdentity(
+  purl: string,
+  onUncanonicalized?: (purl: string, error: unknown) => void,
+): PurlIdentity {
+  let parsed: ParsedPurlIdentity | null;
+  try {
+    parsed = normalizeParsedPurlIdentity(purl);
+  } catch {
+    return { rawPurl: purl, canonicalComponentPurl: purl };
+  }
+
+  if (!parsed) {
+    return { rawPurl: purl, canonicalComponentPurl: purl };
+  }
+
+  const rawComponentPurl = rawComponentPurlFromParsed(purl, parsed);
+  const canonicalComponentPurl = normalizePurlIdentity(purl, {
+    version: 'omit',
+    onUncanonicalized,
+  });
+  const canonicalVersionPurl = parsed.version
+    ? normalizePurlIdentity(purl, { version: 'preserve', onUncanonicalized })
+    : undefined;
+
+  const identity: PurlIdentity = { rawPurl: purl, canonicalComponentPurl };
+
+  if (canonicalVersionPurl) {
+    identity.canonicalVersionPurl = canonicalVersionPurl;
+  }
+
+  if (rawComponentPurl !== canonicalComponentPurl) {
+    identity.legacyComponentPurl = rawComponentPurl;
+  }
+
+  return identity;
+}
+
+export function canonicalizeVersionFilter<
+  TFilter extends { contextPurls: string[]; resultPurls?: string[] },
+>(filter?: TFilter): TFilter | undefined {
+  if (!filter) {
+    return undefined;
+  }
+
+  return {
+    ...filter,
+    contextPurls: filter.contextPurls.map((purl) =>
+      normalizePurlIdentity(purl, { version: 'preserve' }),
+    ),
+    ...(filter.resultPurls
+      ? {
+          resultPurls: filter.resultPurls.map((purl) =>
+            normalizePurlIdentity(purl, { version: 'preserve' }),
+          ),
+        }
+      : {}),
+  } as TFilter;
 }
 
 export function deriveComponentStatus(

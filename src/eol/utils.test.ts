@@ -1,6 +1,11 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { deriveComponentStatus, canonicalizePurl } from './utils.ts';
+import {
+  deriveComponentStatus,
+  normalizePurlIdentity,
+  createPurlIdentity,
+  canonicalizeVersionFilter,
+} from './utils.ts';
 import type { EolScanComponentMetadata } from '../types/eol-scan.ts';
 
 // These are required for the object but not used to derive the status
@@ -81,188 +86,486 @@ describe('deriveComponentStatus', () => {
   });
 });
 
-describe('canonicalizePurl', () => {
-  // --- Canonical output matrix: exact expected strings ---
-  // Each assertion pins the literal output produced by the library-based implementation.
-  // Each assertion pins the exact output; a change in alias, case, or encoding fails a concrete string comparison.
+describe('createPurlIdentity', () => {
+  test('creates versioned identity with alias canonical component and version purls', () => {
+    assert.deepEqual(createPurlIdentity('pkg:go/github.com/foo/bar@v1.0.0'), {
+      rawPurl: 'pkg:go/github.com/foo/bar@v1.0.0',
+      canonicalComponentPurl: 'pkg:golang/github.com/foo/bar',
+      canonicalVersionPurl: 'pkg:golang/github.com/foo/bar@v1.0.0',
+      legacyComponentPurl: 'pkg:go/github.com/foo/bar',
+    });
+  });
 
-  describe('type alias translation', () => {
+  test('creates versioned identity with case-folded canonical and raw legacy component purls', () => {
+    assert.deepEqual(
+      createPurlIdentity('pkg:nuget/Serilog.Sinks.Console@2.1.0'),
+      {
+        rawPurl: 'pkg:nuget/Serilog.Sinks.Console@2.1.0',
+        canonicalComponentPurl: 'pkg:nuget/serilog.sinks.console',
+        canonicalVersionPurl: 'pkg:nuget/serilog.sinks.console@2.1.0',
+        legacyComponentPurl: 'pkg:nuget/Serilog.Sinks.Console',
+      },
+    );
+  });
+
+  test('creates versioned identity without legacy component when case-sensitive canonical output is unchanged', () => {
+    assert.deepEqual(
+      createPurlIdentity('pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0'),
+      {
+        rawPurl: 'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
+        canonicalComponentPurl: 'pkg:maven/org.Apache.Commons/commons-Lang3',
+        canonicalVersionPurl:
+          'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
+      },
+    );
+  });
+
+  test('creates versionless identity without adding a version purl', () => {
+    assert.deepEqual(createPurlIdentity('pkg:cargo/MyLib'), {
+      rawPurl: 'pkg:cargo/MyLib',
+      canonicalComponentPurl: 'pkg:cargo/mylib',
+      legacyComponentPurl: 'pkg:cargo/MyLib',
+    });
+  });
+
+  test('passes through parse failures as component identity without throwing', () => {
+    assert.deepEqual(createPurlIdentity('not-a-purl'), {
+      rawPurl: 'not-a-purl',
+      canonicalComponentPurl: 'not-a-purl',
+    });
+  });
+
+  test('creates a versionless Swift component identity from a versioned Swift PURL', () => {
+    const calls: Array<{ purl: string; error: unknown }> = [];
+
+    assert.deepEqual(
+      createPurlIdentity(
+        'pkg:swift/github.com/apple/swift-argument-parser@1.2.3',
+        (purl, error) => {
+          calls.push({ purl, error });
+        },
+      ),
+      {
+        rawPurl: 'pkg:swift/github.com/apple/swift-argument-parser@1.2.3',
+        canonicalComponentPurl:
+          'pkg:swift/github.com/apple/swift-argument-parser',
+        canonicalVersionPurl:
+          'pkg:swift/github.com/apple/swift-argument-parser@1.2.3',
+      },
+    );
+    assert.equal(calls.length, 0);
+  });
+
+  test('keeps Debian qualified component identities distinct when version is removed', () => {
+    const i386Identity = createPurlIdentity(
+      'pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie',
+    );
+    const amd64Identity = createPurlIdentity(
+      'pkg:deb/debian/curl@7.50.3-1?arch=amd64&distro=jessie',
+    );
+
+    assert.deepEqual(i386Identity, {
+      rawPurl: 'pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie',
+      canonicalComponentPurl: 'pkg:deb/debian/curl?arch=i386&distro=jessie',
+      canonicalVersionPurl:
+        'pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie',
+    });
+    assert.deepEqual(amd64Identity, {
+      rawPurl: 'pkg:deb/debian/curl@7.50.3-1?arch=amd64&distro=jessie',
+      canonicalComponentPurl: 'pkg:deb/debian/curl?arch=amd64&distro=jessie',
+      canonicalVersionPurl:
+        'pkg:deb/debian/curl@7.50.3-1?arch=amd64&distro=jessie',
+    });
+    assert.notEqual(
+      i386Identity.canonicalComponentPurl,
+      amd64Identity.canonicalComponentPurl,
+    );
+  });
+
+  test('preserves required Conan qualifiers in versionless component identity', () => {
+    assert.doesNotThrow(() =>
+      createPurlIdentity(
+        'pkg:conan/conan-center/openssl@1.1.1?user=conan&channel=stable',
+        () => {
+          throw new Error('boom');
+        },
+      ),
+    );
+
+    assert.deepEqual(
+      createPurlIdentity(
+        'pkg:conan/conan-center/openssl@1.1.1?user=conan&channel=stable',
+      ),
+      {
+        rawPurl:
+          'pkg:conan/conan-center/openssl@1.1.1?user=conan&channel=stable',
+        canonicalComponentPurl:
+          'pkg:conan/conan-center/openssl?channel=stable&user=conan',
+        canonicalVersionPurl:
+          'pkg:conan/conan-center/openssl@1.1.1?channel=stable&user=conan',
+        legacyComponentPurl:
+          'pkg:conan/conan-center/openssl?user=conan&channel=stable',
+      },
+    );
+  });
+
+  test('preserves subpath when version is removed from component identity', () => {
+    assert.deepEqual(
+      createPurlIdentity(
+        'pkg:npm/%40scope/pkg@1.0.0?repository_url=https://example.com/repo#/dist/file.js',
+      ),
+      {
+        rawPurl:
+          'pkg:npm/%40scope/pkg@1.0.0?repository_url=https://example.com/repo#/dist/file.js',
+        canonicalComponentPurl:
+          'pkg:npm/%40scope/pkg?repository_url=https%3A%2F%2Fexample.com%2Frepo#dist/file.js',
+        canonicalVersionPurl:
+          'pkg:npm/%40scope/pkg@1.0.0?repository_url=https%3A%2F%2Fexample.com%2Frepo#dist/file.js',
+        legacyComponentPurl:
+          'pkg:npm/%40scope/pkg?repository_url=https://example.com/repo#/dist/file.js',
+      },
+    );
+  });
+
+  test('preserves raw qualifiers for versionless component legacy identity', () => {
+    assert.deepEqual(
+      createPurlIdentity(
+        'pkg:conan/conan-center/openssl?user=conan&channel=stable',
+        () => {
+          throw new Error('boom');
+        },
+      ),
+      {
+        rawPurl: 'pkg:conan/conan-center/openssl?user=conan&channel=stable',
+        canonicalComponentPurl:
+          'pkg:conan/conan-center/openssl?channel=stable&user=conan',
+        legacyComponentPurl:
+          'pkg:conan/conan-center/openssl?user=conan&channel=stable',
+      },
+    );
+  });
+
+  test('normalizes a bare-major Go version without invoking type validators', () => {
+    const calls: Array<{ purl: string; error: unknown }> = [];
+    assert.deepEqual(
+      createPurlIdentity('pkg:go/github.com/foo/bar@v1', (purl, error) => {
+        calls.push({ purl, error });
+      }),
+      {
+        rawPurl: 'pkg:go/github.com/foo/bar@v1',
+        canonicalComponentPurl: 'pkg:golang/github.com/foo/bar',
+        canonicalVersionPurl: 'pkg:golang/github.com/foo/bar@v1',
+        legacyComponentPurl: 'pkg:go/github.com/foo/bar',
+      },
+    );
+    assert.equal(calls.length, 0);
+  });
+
+  test('swallows throwing callbacks without breaking identity creation', () => {
+    assert.doesNotThrow(() =>
+      createPurlIdentity('pkg:go/github.com/foo/bar@v1', () => {
+        throw new Error('boom');
+      }),
+    );
+  });
+
+  test('keeps encoded npm canonical identity idempotent across raw and pre-encoded scoped inputs', () => {
+    const rawIdentity = createPurlIdentity('pkg:npm/@Angular/Core@15.0.0');
+    const encodedIdentity = createPurlIdentity(
+      'pkg:npm/%40angular/core@15.0.0',
+    );
+
+    assert.deepEqual(rawIdentity, {
+      rawPurl: 'pkg:npm/@Angular/Core@15.0.0',
+      canonicalComponentPurl: 'pkg:npm/%40angular/core',
+      canonicalVersionPurl: 'pkg:npm/%40angular/core@15.0.0',
+      legacyComponentPurl: 'pkg:npm/@Angular/Core',
+    });
+    assert.deepEqual(encodedIdentity, {
+      rawPurl: 'pkg:npm/%40angular/core@15.0.0',
+      canonicalComponentPurl: 'pkg:npm/%40angular/core',
+      canonicalVersionPurl: 'pkg:npm/%40angular/core@15.0.0',
+    });
+    assert.equal(
+      rawIdentity.canonicalComponentPurl,
+      encodedIdentity.canonicalComponentPurl,
+    );
+    assert.equal(
+      rawIdentity.canonicalVersionPurl,
+      encodedIdentity.canonicalVersionPurl,
+    );
+  });
+
+  test('does not apply extra pypi normalization beyond packageurl-js canonical output', () => {
+    assert.deepEqual(createPurlIdentity('pkg:pypi/my-package@1.0.0'), {
+      rawPurl: 'pkg:pypi/my-package@1.0.0',
+      canonicalComponentPurl: 'pkg:pypi/my-package',
+      canonicalVersionPurl: 'pkg:pypi/my-package@1.0.0',
+    });
+  });
+
+  test('does not apply extra pub normalization beyond packageurl-js canonical output', () => {
+    assert.deepEqual(createPurlIdentity('pkg:pub/my_package@1.0.0'), {
+      rawPurl: 'pkg:pub/my_package@1.0.0',
+      canonicalComponentPurl: 'pkg:pub/my_package',
+      canonicalVersionPurl: 'pkg:pub/my_package@1.0.0',
+    });
+  });
+});
+
+describe('canonicalizeVersionFilter', () => {
+  test('returns undefined for an undefined filter', () => {
+    assert.equal(canonicalizeVersionFilter(undefined), undefined);
+  });
+
+  test('canonicalizes context and result purls with exact output', () => {
+    assert.deepEqual(
+      canonicalizeVersionFilter({
+        contextPurls: [
+          'pkg:nuget/Serilog.Sinks.Console@2.1.0',
+          'pkg:go/github.com/foo/bar@v1.0.0',
+        ],
+        resultPurls: [
+          'pkg:composer/Foo/Bar@1.0.0',
+          'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
+        ],
+      }),
+      {
+        contextPurls: [
+          'pkg:nuget/serilog.sinks.console@2.1.0',
+          'pkg:golang/github.com/foo/bar@v1.0.0',
+        ],
+        resultPurls: [
+          'pkg:composer/foo/bar@1.0.0',
+          'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
+        ],
+      },
+    );
+  });
+
+  test('preserves additional filter fields while canonicalizing purl arrays', () => {
+    assert.deepEqual(
+      canonicalizeVersionFilter({
+        contextPurls: ['pkg:cargo/MyLib@0.1.0'],
+        source: 'reconcile',
+      }),
+      { contextPurls: ['pkg:cargo/mylib@0.1.0'], source: 'reconcile' },
+    );
+  });
+});
+
+describe('normalizePurlIdentity', () => {
+  // --- Preserve-version canonical output matrix: exact expected strings ---
+
+  describe('preserve-version type alias translation', () => {
     test('go maps to golang — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:go/github.com/foo/bar@v1.0.0'),
+        normalizePurlIdentity('pkg:go/github.com/foo/bar@v1.0.0'),
         'pkg:golang/github.com/foo/bar@v1.0.0',
       );
     });
 
     test('rubygems maps to gem — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:rubygems/rails@7.0.0'),
+        normalizePurlIdentity('pkg:rubygems/rails@7.0.0'),
         'pkg:gem/rails@7.0.0',
       );
     });
 
     test('golang is not re-aliased — idempotent', () => {
       assert.equal(
-        canonicalizePurl('pkg:golang/github.com/foo/bar@v1.0.0'),
+        normalizePurlIdentity('pkg:golang/github.com/foo/bar@v1.0.0'),
         'pkg:golang/github.com/foo/bar@v1.0.0',
       );
     });
 
     test('gem is not re-aliased — idempotent', () => {
       assert.equal(
-        canonicalizePurl('pkg:gem/rails@7.0.0'),
+        normalizePurlIdentity('pkg:gem/rails@7.0.0'),
         'pkg:gem/rails@7.0.0',
       );
     });
 
     test('npm type is not aliased — passes through unchanged', () => {
       assert.equal(
-        canonicalizePurl('pkg:npm/lodash@4.17.21'),
+        normalizePurlIdentity('pkg:npm/lodash@4.17.21'),
         'pkg:npm/lodash@4.17.21',
       );
     });
   });
 
-  // --- Case matrix: lowercased types ---
-
-  describe('ecosystem case normalization — lowercased allowlist', () => {
+  describe('preserve-version ecosystem case normalization', () => {
     test('nuget name is lowercased — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:nuget/Serilog.Sinks.Console@2.1.0'),
+        normalizePurlIdentity('pkg:nuget/Serilog.Sinks.Console@2.1.0'),
         'pkg:nuget/serilog.sinks.console@2.1.0',
       );
     });
 
     test('composer namespace and name are lowercased — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:composer/Foo/Bar@1.0.0'),
+        normalizePurlIdentity('pkg:composer/Foo/Bar@1.0.0'),
         'pkg:composer/foo/bar@1.0.0',
       );
     });
 
     test('cargo name is lowercased — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:cargo/MyLib@0.1.0'),
+        normalizePurlIdentity('pkg:cargo/MyLib@0.1.0'),
         'pkg:cargo/mylib@0.1.0',
       );
     });
 
     test('npm percent-encoded scoped name is lowercased — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:npm/%40Angular/Core@15.0.0'),
+        normalizePurlIdentity('pkg:npm/%40Angular/Core@15.0.0'),
         'pkg:npm/%40angular/core@15.0.0',
       );
     });
 
     test('npm raw scoped name is percent-encoded and lowercased — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:npm/@angular/core@15.0.0'),
+        normalizePurlIdentity('pkg:npm/@angular/core@15.0.0'),
         'pkg:npm/%40angular/core@15.0.0',
       );
     });
   });
 
-  // --- Case matrix: case-preserved types ---
-
-  describe('ecosystem case normalization — case-sensitive types preserved', () => {
+  describe('preserve-version case-sensitive types preserved', () => {
     test('maven groupId and artifactId are byte-unchanged — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0'),
+        normalizePurlIdentity(
+          'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
+        ),
         'pkg:maven/org.Apache.Commons/commons-Lang3@3.12.0',
       );
     });
 
     test('golang namespace path is byte-unchanged — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:golang/github.com/BurntSushi/toml@v0.4.1'),
+        normalizePurlIdentity('pkg:golang/github.com/BurntSushi/toml@v0.4.1'),
         'pkg:golang/github.com/BurntSushi/toml@v0.4.1',
       );
     });
 
     test('multi-segment golang path is byte-unchanged — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:golang/github.com/Foo/Bar/Baz@v1.0.0'),
+        normalizePurlIdentity('pkg:golang/github.com/Foo/Bar/Baz@v1.0.0'),
         'pkg:golang/github.com/Foo/Bar/Baz@v1.0.0',
       );
     });
 
     test('rubygems alias applies but gem name is byte-unchanged — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:rubygems/ActiveSupport@7.0.0'),
+        normalizePurlIdentity('pkg:rubygems/ActiveSupport@7.0.0'),
         'pkg:gem/ActiveSupport@7.0.0',
       );
     });
   });
 
-  // --- Version value preservation ---
-
-  describe('version value preservation', () => {
+  describe('preserve-version version value handling', () => {
     test('version with mixed case is not case-folded — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:nuget/serilog@2.0.0-Beta3'),
+        normalizePurlIdentity('pkg:nuget/serilog@2.0.0-Beta3'),
         'pkg:nuget/serilog@2.0.0-Beta3',
       );
     });
 
     test('version with +build metadata preserves value — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:maven/g/a@1.0.0+build5'),
+        normalizePurlIdentity('pkg:maven/g/a@1.0.0+build5'),
         'pkg:maven/g/a@1.0.0+build5',
       );
     });
 
     test('versionless PURL is accepted — exact canonical output', () => {
-      assert.equal(canonicalizePurl('pkg:nuget/Serilog'), 'pkg:nuget/serilog');
+      assert.equal(
+        normalizePurlIdentity('pkg:nuget/Serilog'),
+        'pkg:nuget/serilog',
+      );
+    });
+
+    test('go bare-major version is preserved without invoking type validators', () => {
+      assert.equal(
+        normalizePurlIdentity('pkg:go/github.com/foo/bar@v1'),
+        'pkg:golang/github.com/foo/bar@v1',
+      );
     });
   });
 
-  // --- Qualifier and subpath parsing edges ---
-
-  describe('qualifier and subpath parsing', () => {
-    test('@ inside a qualifier value is not treated as the version separator — version is 1.0.0, qualifier canonically re-encoded', () => {
-      // The version is isolated as "1.0.0"; the @ in git@github.com belongs to the
-      // qualifier value, which the serializer re-encodes: git@github.com → git%40github.com%2Fx%2Fy.git
+  describe('preserve-version qualifier and subpath parsing', () => {
+    test('@ inside a qualifier value is not treated as the version separator', () => {
       assert.equal(
-        canonicalizePurl('pkg:npm/foo@1.0.0?vcs_url=git@github.com/x/y.git'),
+        normalizePurlIdentity(
+          'pkg:npm/foo@1.0.0?vcs_url=git@github.com/x/y.git',
+        ),
         'pkg:npm/foo@1.0.0?vcs_url=git%40github.com%2Fx%2Fy.git',
       );
     });
 
-    test('@ inside qualifier value is idempotent — canonicalize twice returns equal', () => {
+    test('@ inside qualifier value is idempotent — normalize twice returns equal', () => {
       const input = 'pkg:npm/foo@1.0.0?vcs_url=git@github.com/x/y.git';
-      const once = canonicalizePurl(input);
-      assert.equal(canonicalizePurl(once), once);
+      const once = normalizePurlIdentity(input);
+      assert.equal(normalizePurlIdentity(once), once);
     });
 
     test('# in subpath is parsed correctly — exact canonical output', () => {
-      // The subpath @ is re-encoded by the serializer: path@x → path%40x
       assert.equal(
-        canonicalizePurl('pkg:npm/foo@1.0.0#path@x'),
+        normalizePurlIdentity('pkg:npm/foo@1.0.0#path@x'),
         'pkg:npm/foo@1.0.0#path%40x',
       );
     });
 
-    test('# in subpath is idempotent — canonicalize twice returns equal', () => {
+    test('# in subpath is idempotent — normalize twice returns equal', () => {
       const input = 'pkg:npm/foo@1.0.0#path@x';
-      const once = canonicalizePurl(input);
-      assert.equal(canonicalizePurl(once), once);
+      const once = normalizePurlIdentity(input);
+      assert.equal(normalizePurlIdentity(once), once);
     });
   });
 
-  // --- pypi: not double-applied ---
-
-  describe('pypi passes through case normalization unchanged', () => {
-    test('pypi name is byte-identical to input — exact canonical output', () => {
+  describe('omit-version canonical output', () => {
+    test('removes only version from Swift while keeping namespace and name', () => {
       assert.equal(
-        canonicalizePurl('pkg:pypi/requests@2.28.0'),
-        'pkg:pypi/requests@2.28.0',
+        normalizePurlIdentity(
+          'pkg:swift/github.com/apple/swift-argument-parser@1.2.3',
+          { version: 'omit' },
+        ),
+        'pkg:swift/github.com/apple/swift-argument-parser',
+      );
+    });
+
+    test('preserves Conan qualifiers when version is omitted', () => {
+      assert.equal(
+        normalizePurlIdentity(
+          'pkg:conan/conan-center/openssl@1.1.1?user=conan&channel=stable',
+          { version: 'omit' },
+        ),
+        'pkg:conan/conan-center/openssl?channel=stable&user=conan',
+      );
+    });
+
+    test('preserves Debian qualifiers when version is omitted', () => {
+      assert.equal(
+        normalizePurlIdentity(
+          'pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie',
+          { version: 'omit' },
+        ),
+        'pkg:deb/debian/curl?arch=i386&distro=jessie',
+      );
+    });
+
+    test('preserves npm subpath and qualifiers when version is omitted', () => {
+      assert.equal(
+        normalizePurlIdentity(
+          'pkg:npm/%40scope/pkg@1.0.0?repository_url=https://example.com/repo#/dist/file.js',
+          { version: 'omit' },
+        ),
+        'pkg:npm/%40scope/pkg?repository_url=https%3A%2F%2Fexample.com%2Frepo#dist/file.js',
       );
     });
   });
 
-  // --- Idempotency ---
-
-  describe('idempotency — canonicalize(canonicalize(x)) === canonicalize(x)', () => {
+  describe('idempotency', () => {
     const idempotentCases: Array<[string, string]> = [
       ['pkg:nuget/Serilog.Sinks.Console@2.1.0', 'nuget mixed case'],
       ['pkg:composer/Foo/Bar@1.0.0', 'composer mixed case'],
@@ -279,139 +582,74 @@ describe('canonicalizePurl', () => {
     ];
 
     for (const [input, label] of idempotentCases) {
-      test(`idempotent for ${label}`, () => {
-        const once = canonicalizePurl(input);
-        assert.equal(canonicalizePurl(once), once);
+      test(`preserve-version idempotent for ${label}`, () => {
+        const once = normalizePurlIdentity(input);
+        assert.equal(normalizePurlIdentity(once), once);
       });
     }
   });
 
-  // --- Unparseable passthrough ---
-
   describe('unparseable PURL passthrough — returns input unchanged, never throws', () => {
     test('string not starting with pkg: is returned unchanged', () => {
-      assert.equal(canonicalizePurl('not-a-purl'), 'not-a-purl');
+      assert.equal(normalizePurlIdentity('not-a-purl'), 'not-a-purl');
     });
 
     test('malformed pkg: input is returned unchanged', () => {
-      assert.equal(canonicalizePurl('pkg:'), 'pkg:');
+      assert.equal(normalizePurlIdentity('pkg:'), 'pkg:');
     });
 
     test('no exception for non-PURL input', () => {
-      assert.doesNotThrow(() => canonicalizePurl('not-a-purl'));
+      assert.doesNotThrow(() => normalizePurlIdentity('not-a-purl'));
     });
 
     test('no exception for malformed pkg: input', () => {
-      assert.doesNotThrow(() => canonicalizePurl('pkg:'));
-    });
-
-    // A bare-major Go version (@v1, not full semver) is not serializable by the
-    // pinned packageurl-js, so the input passes through unchanged and is not aliased.
-    test('go-typed PURL with a bare-major version (@v1) does not throw', () => {
-      assert.doesNotThrow(() =>
-        canonicalizePurl('pkg:go/github.com/foo/bar@v1'),
-      );
-    });
-
-    test('go-typed PURL with a bare-major version (@v1) returns input unchanged', () => {
-      assert.equal(
-        canonicalizePurl('pkg:go/github.com/foo/bar@v1'),
-        'pkg:go/github.com/foo/bar@v1',
-      );
+      assert.doesNotThrow(() => normalizePurlIdentity('pkg:'));
     });
   });
-
-  // --- Encoded separator inside a segment is preserved ---
 
   describe('percent-encoded slash inside a segment is preserved', () => {
     test('nuget %2F inside name stays encoded and uppercase-hex — exact canonical output', () => {
       assert.equal(
-        canonicalizePurl('pkg:nuget/Foo%2FBar@1.0.0'),
+        normalizePurlIdentity('pkg:nuget/Foo%2FBar@1.0.0'),
         'pkg:nuget/foo%2Fbar@1.0.0',
       );
     });
   });
 
-  // --- onUncanonicalized observability hook ---
-  // The hook fires ONLY in the serialize-failure branch (parsed OK, reconstruct threw).
-  // It MUST NOT fire on parse failures or on success. The function never throws even
-  // when the callback itself throws.
-
   describe('onUncanonicalized observability hook', () => {
-    // A golang bare-major version (@v1) parses OK but fails to serialize under
-    // the packageurl-js golang validator — the canonical serialize-failure scenario.
-    const serializeFailurePurl = 'pkg:go/github.com/foo/bar@v1';
-
-    test('hook fires exactly once on serialize failure, receives input purl and an error', () => {
-      let callCount = 0;
-      let receivedPurl: string | undefined;
-      let receivedError: unknown;
-
-      canonicalizePurl(serializeFailurePurl, (purl, error) => {
-        callCount++;
-        receivedPurl = purl;
-        receivedError = error;
-      });
-
-      assert.equal(callCount, 1);
-      assert.equal(receivedPurl, serializeFailurePurl);
-      assert.ok(receivedError instanceof Error);
-    });
-
-    test('return value on serialize failure is the input unchanged', () => {
-      const result = canonicalizePurl(serializeFailurePurl, () => {});
-      assert.equal(result, serializeFailurePurl);
-    });
-
     test('hook does NOT fire on parse failure — non-PURL input', () => {
       let callCount = 0;
-      canonicalizePurl('not-a-purl', () => {
-        callCount++;
-      });
-      assert.equal(callCount, 0);
-    });
-
-    test('hook does NOT fire on parse failure — malformed pkg: input', () => {
-      let callCount = 0;
-      canonicalizePurl('pkg:', () => {
-        callCount++;
+      normalizePurlIdentity('not-a-purl', {
+        version: 'preserve',
+        onUncanonicalized: () => {
+          callCount++;
+        },
       });
       assert.equal(callCount, 0);
     });
 
     test('hook does NOT fire on success — nuget canonical output', () => {
       let callCount = 0;
-      const result = canonicalizePurl('pkg:nuget/Serilog@1.0.0', () => {
-        callCount++;
+      const result = normalizePurlIdentity('pkg:nuget/Serilog@1.0.0', {
+        version: 'preserve',
+        onUncanonicalized: () => {
+          callCount++;
+        },
       });
       assert.equal(callCount, 0);
       assert.equal(result, 'pkg:nuget/serilog@1.0.0');
     });
 
-    test('backward compatible — no callback, serialize failure, does not throw', () => {
-      assert.doesNotThrow(() => canonicalizePurl(serializeFailurePurl));
-    });
-
-    test('backward compatible — no callback, serialize failure, returns input unchanged', () => {
-      assert.equal(
-        canonicalizePurl(serializeFailurePurl),
-        serializeFailurePurl,
-      );
-    });
-
-    test('a callback that itself throws does not propagate — function does not throw', () => {
+    test('a callback that itself throws never breaks the identity path', () => {
       assert.doesNotThrow(() => {
-        canonicalizePurl(serializeFailurePurl, () => {
-          throw new Error('boom');
+        const result = normalizePurlIdentity('pkg:go/github.com/foo/bar@v1', {
+          version: 'preserve',
+          onUncanonicalized: () => {
+            throw new Error('boom');
+          },
         });
+        assert.equal(result, 'pkg:golang/github.com/foo/bar@v1');
       });
-    });
-
-    test('a callback that itself throws does not break identity — return value is input unchanged', () => {
-      const result = canonicalizePurl(serializeFailurePurl, () => {
-        throw new Error('boom');
-      });
-      assert.equal(result, serializeFailurePurl);
     });
   });
 });
