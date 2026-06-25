@@ -4,7 +4,15 @@ export { spdxToCdxBom } from './spdx-to-cdx.js';
 export {
   deriveComponentStatus,
   extractPurlsFromCdxBom,
-  canonicalizePurl,
+  normalizePurlIdentity,
+  createPurlIdentity,
+  canonicalizeVersionFilter,
+} from './eol/utils.js';
+export type {
+  NormalizePurlIdentityOptions,
+  NormalizePurlIdentityVersionMode,
+  PurlIdentity,
+  VersionedPurlFilter,
 } from './eol/utils.js';
 
 export type * from './types/eol-scan.js';
