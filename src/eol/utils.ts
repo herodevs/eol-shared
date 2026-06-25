@@ -57,8 +57,14 @@ function notifyUncanonicalized(
 }
 
 function normalizeParsedPurlIdentity(purl: string): ParsedPurlIdentity | null {
-  const [rawType, rawNamespace, rawName, rawVersion, rawQualifiers, rawSubpath] =
-    PackageURL.parseString(purl);
+  const [
+    rawType,
+    rawNamespace,
+    rawName,
+    rawVersion,
+    rawQualifiers,
+    rawSubpath,
+  ] = PackageURL.parseString(purl);
 
   const type = PackageURL.Component.type.normalize(rawType);
   const name = PackageURL.Component.name.normalize(rawName);
