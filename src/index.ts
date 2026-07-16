@@ -16,6 +16,7 @@ export type {
 } from './eol/utils.js';
 
 export type * from './types/eol-scan.js';
+export { UNKNOWN_REASONS, isUnknownReason } from './types/eol-scan.js';
 export type * from './types/index.js';
 
 export { ComponentScope } from './types/index.js';

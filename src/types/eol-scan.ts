@@ -25,6 +25,28 @@ export interface EolScanNextSupportedVersion {
   releasedAt: Date;
 }
 
+export const UNKNOWN_REASONS = [
+  'not_identifiable',
+  'no_listed_versions',
+  'unsupported_ecosystem',
+  'queued',
+] as const;
+export type UnknownReason = (typeof UNKNOWN_REASONS)[number];
+
+export interface UnknownComponentMetadata {
+  unknownReason: UnknownReason;
+}
+
+export type ComponentMetadata =
+  | EolScanComponentMetadata
+  | UnknownComponentMetadata;
+
+export function isUnknownReason(v: unknown): v is UnknownReason {
+  return (
+    typeof v === 'string' && (UNKNOWN_REASONS as readonly string[]).includes(v)
+  );
+}
+
 export interface NesRemediation {
   remediations: {
     purls: { nes: string; oss: string };
@@ -67,7 +89,7 @@ export interface Remediation {
 }
 
 export interface EolScanComponent {
-  metadata: EolScanComponentMetadata | null;
+  metadata: ComponentMetadata | null;
   purl: string;
   nesRemediation?: NesRemediation | null;
   remediations?: Remediation[] | null;

@@ -1,8 +1,9 @@
 import { PackageURL } from 'packageurl-js';
 import type { CdxBom } from '../types/index.js';
 import type {
+  ComponentMetadata,
   ComponentStatus,
-  EolScanComponentMetadata,
+  UnknownComponentMetadata,
 } from '../types/eol-scan.js';
 
 // Maps non-canonical PURL type tokens to their canonical equivalents.
@@ -243,10 +244,16 @@ export function canonicalizeVersionFilter<
   } as TFilter;
 }
 
+function isUnknownComponentMetadata(
+  metadata: ComponentMetadata,
+): metadata is UnknownComponentMetadata {
+  return 'unknownReason' in metadata && metadata.unknownReason != null;
+}
+
 export function deriveComponentStatus(
-  metadata: EolScanComponentMetadata | null,
+  metadata: ComponentMetadata | null,
 ): ComponentStatus {
-  if (!metadata) {
+  if (!metadata || isUnknownComponentMetadata(metadata)) {
     return 'UNKNOWN';
   }
 
