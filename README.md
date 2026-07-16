@@ -85,7 +85,10 @@ The package exports the following TypeScript types:
 #### EOL
 
 - `CveStats` - CVE statistics with ID, CVSS score, and publication date
-- `EolScanComponentMetadata` - Metadata for EOL scan components including EOL status, dates, reasons, and CVE information
+- `EolScanComponentMetadata` - Metadata for a resolved EOL scan component including EOL status, dates, reasons, and CVE information
+- `UnknownComponentMetadata` - Metadata for an unknown/unresolvable component, carrying only an `unknownReason`
+- `ComponentMetadata` - Union of `EolScanComponentMetadata` and `UnknownComponentMetadata`; the type of `EolScanComponent.metadata`
+- `UnknownReason` - Reason a component is unknown (`not_identifiable`, `no_listed_versions`, `unsupported_ecosystem`, `queued`)
 - `EolScanComponent` - Component data for EOL scanning with metadata, PURL, and optional NES remediation
 - `EolReportMetadata` - Report-level metadata including component counts
 - `EolReport` - Complete EOL scan report with components and metadata
