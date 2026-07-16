@@ -6,6 +6,7 @@ import {
   createPurlIdentity,
   canonicalizeVersionFilter,
 } from './utils.ts';
+import { isUnknownReason, UNKNOWN_REASONS } from '../types/eol-scan.ts';
 import type { EolScanComponentMetadata } from '../types/eol-scan.ts';
 
 // These are required for the object but not used to derive the status
@@ -83,6 +84,42 @@ describe('deriveComponentStatus', () => {
 
     const result = deriveComponentStatus(metadata);
     assert.equal(result, 'OK');
+  });
+
+  for (const unknownReason of UNKNOWN_REASONS) {
+    test(`should return UNKNOWN for unknownReason "${unknownReason}"`, () => {
+      const result = deriveComponentStatus({ unknownReason });
+      assert.equal(result, 'UNKNOWN');
+    });
+  }
+
+  test('should return UNKNOWN for an unrecognized unknownReason value', () => {
+    const result = deriveComponentStatus({
+      unknownReason: 'something_else',
+    } as never);
+    assert.equal(result, 'UNKNOWN');
+  });
+});
+
+describe('isUnknownReason', () => {
+  for (const unknownReason of UNKNOWN_REASONS) {
+    test(`returns true for "${unknownReason}"`, () => {
+      assert.equal(isUnknownReason(unknownReason), true);
+    });
+  }
+
+  test('returns false for null', () => {
+    assert.equal(isUnknownReason(null), false);
+  });
+
+  test('returns false for an unrecognized string', () => {
+    assert.equal(isUnknownReason('something_else'), false);
+  });
+
+  test('returns false for non-string garbage', () => {
+    assert.equal(isUnknownReason(42), false);
+    assert.equal(isUnknownReason(undefined), false);
+    assert.equal(isUnknownReason({}), false);
   });
 });
 
