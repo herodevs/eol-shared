@@ -1,0 +1,55 @@
+# Bootstrap checklist — complete before merging this workflow for the first time:
+# 1. Publish the package once from a clean checkout using an npm account with
+#    permission to create public packages in the @herodevs scope:
+#      npm ci && npm test && npm run build && npm publish --access public
+# 2. On npmjs.com, open @herodevs/eol-shared > Settings > Trusted Publisher and
+#    add a GitHub Actions publisher with organization "herodevs", repository
+#    "eol-shared", workflow filename "npm-publish.yml", and permission to run
+#    "npm publish". Leave the environment blank unless one is added below.
+# 3. Verify the trusted publisher is saved before pushing the first release tag.
+
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate
+        run: |
+          npm run lint
+          npm run format:check
+          npm run type-check
+          npm test
+          npm run build
+
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          package_version="$(node --print "require('./package.json').version")"
+          test "v${package_version}" = "${GITHUB_REF_NAME}"
+
+      - name: Publish
+        run: npm publish --access public
