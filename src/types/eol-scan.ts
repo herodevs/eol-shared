@@ -88,9 +88,18 @@ export interface Remediation {
   target?: RemediationTarget;
 }
 
+export interface DependencySummary {
+  directDependency: boolean | null;
+  transitiveDependency: boolean | null;
+  prodDependency: boolean | null;
+  devDependency: boolean | null;
+  dependencies: string[];
+}
+
 export interface EolScanComponent {
   metadata: ComponentMetadata | null;
   purl: string;
+  dependencySummary: DependencySummary | null;
   nesRemediation?: NesRemediation | null;
   remediations?: Remediation[] | null;
 }
