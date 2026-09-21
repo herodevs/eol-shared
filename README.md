@@ -89,7 +89,8 @@ The package exports the following TypeScript types:
 - `UnknownComponentMetadata` - Metadata for an unknown/unresolvable component, carrying only an `unknownReason`
 - `ComponentMetadata` - Union of `EolScanComponentMetadata` and `UnknownComponentMetadata`; the type of `EolScanComponent.metadata`
 - `UnknownReason` - Reason a component is unknown (`not_identifiable`, `no_listed_versions`, `unsupported_ecosystem`, `queued`)
-- `EolScanComponent` - Component data for EOL scanning with metadata, PURL, and optional NES remediation
+- `DependencySummary` - Dependency graph classification for a component; individual classifications may be unknown, while a `null` summary means the SBOM graph could not be parsed
+- `EolScanComponent` - Component data for EOL scanning with metadata, PURL, dependency summary, and optional remediation details
 - `EolReportMetadata` - Report-level metadata including component counts
 - `EolReport` - Complete EOL scan report with components and metadata
 - `EolReportQueryResponse` - GraphQL response type for EOL report queries
