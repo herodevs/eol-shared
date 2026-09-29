@@ -1,4 +1,8 @@
-import type { DependencySummary, EolScanComponent } from './eol-scan.js';
+import type {
+  DependencySummary,
+  EolScanComponent,
+  NesRemediation,
+} from './eol-scan.js';
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <
@@ -31,4 +35,12 @@ export type ComponentDependencySummaryIsRequired = Assert<
     {} extends Pick<EolScanComponent, 'dependencySummary'> ? true : false,
     false
   >
+>;
+
+export type NesRemediationCarriesTheFederationKey = Assert<
+  Equal<NesRemediation['target'], string | undefined>
+>;
+
+export type ComponentNesRemediationIsTheCatalogStub = Assert<
+  Equal<EolScanComponent['nesRemediation'], NesRemediation | null | undefined>
 >;

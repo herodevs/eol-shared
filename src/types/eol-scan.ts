@@ -47,7 +47,15 @@ export function isUnknownReason(v: unknown): v is UnknownReason {
   );
 }
 
+/**
+ * The catalog remediation attached to a scan component as clients see it through
+ * the gateway. The scan service only emits the federation key (`target`, the
+ * component purl it was given); the catalog subgraph owns and resolves
+ * `remediations`. A GraphQL client receives only the fields it selects, so
+ * `target` is optional: clients that select only `remediations` never see it.
+ */
 export interface NesRemediation {
+  target?: string;
   remediations: {
     purls: { nes: string; oss: string };
     urls: { main: string };
